@@ -1,2 +1,2 @@
-# vlib
-a video library tool / visualizer / analyzer
+# mLib
+a media file library tool / visualizer / analyzer

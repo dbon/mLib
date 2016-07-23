@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class Logger {
 
-  public static final String logFileName = "vlib.log";
+  public static final String logFileName = "mlib.log";
   private static File logFile = null;
 
   private static DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyy HH:mm:ss");

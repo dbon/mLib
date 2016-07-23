@@ -6,98 +6,165 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import de.dbon.java.vlib.object.Video;
+import de.dbon.java.vlib.object.MediaFile;
 
-public class FileProcessor {
+public class FileProcessor implements Runnable {
 
-  private File directory = null;
+  private File searchDir = null;
   private ArrayList<File> filesInDirectory = null;
-  private static ArrayList<Video> scannedVideos = null;
-  public static ArrayList<Video> videoLibrary = new ArrayList<Video>();
-  private String allowedExtensions = ".mp4,.mpg,.avi,.flv,.wmv,.mov,.mpeg,.mpg,.divx,.mkv";
-  private String unsupportedExtensions = "";
-  private String suspiciousFiles;
+  private static ArrayList<MediaFile> harddriveFiles = null;
+  private static ArrayList<MediaFile> skippedMediaFiles = null;
+  public static ArrayList<MediaFile> sqliteFiles = null;
+
   public static long addedCount = 0;
-  public static long skippedVideos = 0;
+  public static long skippedMediaFileCount = 0;
+  public static long ignoredFilesByExtension = 0;
 
   /**
-   * scans file system recursively for videos and writes them to database.
+   * scans file system recursively for media files and writes them to database.
    * 
    * @param dir the root folder in wich the scan starts
    * @throws IOException
    * @throws SQLException
+   * @throws NoSuchAlgorithmException
    */
-  public FileProcessor(String dir, String databaseFile) throws IOException, SQLException {
-    directory = new File(dir);
-    scannedVideos = new ArrayList<Video>();
-    fetchVideos(new ArrayList<File>(Arrays.asList(directory.listFiles())));
-    calculateVideoDelta(scannedVideos, databaseFile, videoLibrary);
+  public FileProcessor(String dir) throws IOException, SQLException, NoSuchAlgorithmException {
+    searchDir = new File(dir);
+    harddriveFiles = new ArrayList<MediaFile>();
+    skippedMediaFiles = new ArrayList<MediaFile>();
+    skippedMediaFileCount = 0;
+    ignoredFilesByExtension = 0;
+    MediaLibrary.diskCount = 0;
+  }
 
-    Logger.log("unsupportedExtension: " + unsupportedExtensions);
-    Logger.log("suspeciousFiles: " + suspiciousFiles);
-    Logger.log("added videos: " + addedCount);
-    Logger.log("skipped videos: " + skippedVideos);
+  @Override
+  public void run() {
+    try {
+      // reads media files from hard drive and adds them to scannedMediaFiles
+      scanFilesOnDisk(new ArrayList<File>(Arrays.asList(searchDir.listFiles())));
+      // delta logic
+      importNewFiles(harddriveFiles, Configuration.databasePathAndFile, sqliteFiles);
+      fileIntegrityCheck();
+      Interface.getInstance().reloadFileTable();
+    } catch (NoSuchAlgorithmException | IOException e) {
+      e.printStackTrace();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void vLibStatus() {
+    Logger.log("--------------------------------------------------");
+    Logger.log("unsupportedExtension: " + Configuration.unsupportedExtensions);
+    Logger.log("suspeciousFiles: " + Configuration.suspiciousFiles);
+    Logger.log("added files: " + addedCount);
+    Logger.log("skipped relevant files: " + skippedMediaFileCount);
+    Logger.log("ignored files by extension: " + ignoredFilesByExtension);
+    Logger.log("files in library: " + MediaLibrary.vLibCount);
+    Logger.log("files found on disk: " + MediaLibrary.diskCount);
+    Logger.log("--------------------------------------------------");
+  }
+
+  private void fileIntegrityCheck() throws SQLException {
+
+    vLibStatus();
+
+    if (MediaLibrary.vLibCount > MediaLibrary.diskCount) {
+      Logger.log("integrity check failed - scanning for deleted files");
+      Logger.log("Reason: media files in library > media files on disk");
+      removeOutdatedFilesFromDB(harddriveFiles, Configuration.databasePathAndFile, sqliteFiles);
+      DatabaseWorker.getInstance().readLibraryIntoObjects();
+      fileIntegrityCheck();
+    } else {
+      Logger.log("integrity check successfull - all files up to date.");
+    }
+  }
+
+  private void removeOutdatedFilesFromDB(ArrayList<MediaFile> scannedMediaFiles,
+      String databaseFile, ArrayList<MediaFile> mediaFileLibrary) throws SQLException {
+    Logger.log("searching for outdated files...");
+    int count = 0;
+    for (MediaFile vid : mediaFileLibrary) {
+      // is there a media file which is not on hard disc anymore?
+      if (!MediaLibrary.diskHashes.contains(vid.getHash())) {
+        // if yes delete it from db file
+        DatabaseWorker.getInstance().deleteMediaFile(vid.getHash());
+        Logger.log("file " + vid.getName() + " not found on disk, removing from db");
+        count++;
+      } else {
+        Logger
+            .log("file found in db... that means that we have duplicated files in db.. delete DB file and reInitialize!!!");
+        Logger.log("duplicat file: " + vid.toString());
+      }
+    }
+
+    if (count == 0) {
+      Logger.log("no outdated files found.");
+    }
 
   }
 
   /**
-   * searches for the delta between loaded vids from sqlite db and fetched videos from file system
-   * and writes delta to database.
+   * searches for the delta between loaded vids from sqlite db and fetched media files from file
+   * system and writes delta to database.
    * 
-   * @param scannedVideos videos scanned from filesystem
+   * @param scannedMediaFiles files scanned from filesystem
    * @param databaseFile the database file
-   * @param vlib videos which were already stored in database
+   * @param mediaLibrary files which were already stored in database
    * @throws SQLException
    */
-  public static void calculateVideoDelta(ArrayList<Video> scannedVideos, String databaseFile,
-      ArrayList<Video> vlib) throws SQLException {
+  public static void importNewFiles(ArrayList<MediaFile> scannedMediaFiles, String databaseFile,
+      ArrayList<MediaFile> mediaLibrary) throws SQLException {
 
-    // TODO: add logic to calculate delta between scannedVideos and videoLibrary of databaseFile
+    for (MediaFile vid : scannedMediaFiles) {
 
-    for (Video vid : scannedVideos) {
+      // Logger.log("processing scanned file with hash: " + vid.getHash());
 
-      if (!vlib.contains(vid)) {
-        // SqliteConnector.insertVideo(vid, databaseFile);
-        Logger.log("writing video to db: " + vid.toString());
+      if (!MediaLibrary.vlibHashes.contains(vid.getHash())) {
+        Logger.log("processing scanned file with hash: " + vid.getHash());
+        DatabaseWorker.getInstance().insertMediaFile(vid, databaseFile);
+        Logger.log("file not found in db, adding: " + vid.toString());
         addedCount++;
+        MediaLibrary.vLibCount++;
       } else {
-        Logger.log("video already inserted, skipping.");
-        skippedVideos++;
+        // Logger.log("media File already inserted, skipping.");
+        skippedMediaFileCount++;
+        skippedMediaFiles.add(vid);
       }
-
-
     }
   }
 
-  private void fetchVideos(ArrayList<File> files) throws IOException {
+  private void scanFilesOnDisk(ArrayList<File> files) throws IOException, NoSuchAlgorithmException {
     for (File file : files) {
 
-      // recursive call to deep fetch all videos
+      // recursive call to deep fetch all media files
       if (file.isDirectory()) {
-        fetchVideos(new ArrayList<File>(Arrays.asList(file.listFiles())));
+        scanFilesOnDisk(new ArrayList<File>(Arrays.asList(file.listFiles())));
       } else {
 
-        Video video = new Video();
+        MediaFile mFile = new MediaFile();
 
         if (file.getName().contains(".")) {
-          video.setExtension(file.getName().substring(file.getName().lastIndexOf(".")));
+          mFile.setExtension(file.getName().substring(file.getName().lastIndexOf(".")));
         } else {
-          suspiciousFiles += file.getPath() + ",";
+          Configuration.suspiciousFiles += file.getPath() + ",";
           continue;
         }
 
-        if (allowedExtensions.toLowerCase().contains(video.getExtension().toLowerCase())) {
-          video.setName(file.getName().substring(0, file.getName().lastIndexOf(".")));
+        if (Configuration.allowedExtensions.toLowerCase().contains(
+            mFile.getExtension().toLowerCase())) {
+          mFile.setName(file.getName().substring(0, file.getName().lastIndexOf(".")));
 
-          video.setPath(file.getAbsolutePath().replace("?", ""));
-          video.setFilesize(file.length() / 1024 / 1024);
-          video.setViewcount(0);
-          video.setTags("");
+          mFile.setPath(file.getAbsolutePath().replace("?", ""));
+          mFile.setFilesize(file.length() / 1024 / 1024);
+          mFile.setViewcount(0);
+          mFile.setTags("");
 
           // get last access time of file
           Path f2 = file.toPath();
@@ -105,28 +172,38 @@ public class FileProcessor {
           FileTime lastviewed = attr.lastAccessTime();
           SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-HHmmss");
           String lastmodified = df.format(lastviewed.toMillis());
-          video.setLastviewed(lastmodified);
+          mFile.setLastviewed(lastmodified);
 
-          scannedVideos.add(video);
+          mFile.setHash(MediaLibrary.generateFileHash(mFile.getName(), mFile.getExtension(),
+              String.valueOf(mFile.getFilesize())));
+
+          MediaLibrary.diskCount++;
+          MediaLibrary.diskHashes += mFile.getHash();
+          harddriveFiles.add(mFile);
 
         } else {
-          Logger.log("extension " + video.getExtension() + " not allowed, skipping file");
-          if (!unsupportedExtensions.toLowerCase().contains(video.getExtension().toLowerCase())) {
-            unsupportedExtensions += video.getExtension().toLowerCase() + ",";
+          if (!Configuration.unsupportedExtensions.toLowerCase().contains(
+              mFile.getExtension().toLowerCase())) {
+            Configuration.unsupportedExtensions += mFile.getExtension().toLowerCase() + ",";
+            ignoredFilesByExtension++;
           }
         }
-        Logger.log(video.toString());
       }
     }
   }
 
   public String getAllFiles() {
     String allFiles = "";
-    for (File video : filesInDirectory) {
-      allFiles = allFiles + "\r\n" + video.getName();
+    for (File mediaFile : filesInDirectory) {
+      allFiles = allFiles + "\r\n" + mediaFile.getName();
     }
     return allFiles;
   }
 
-
+  void listSkippedMediaFiles() {
+    Logger.log("skipped files:");
+    for (MediaFile vid : skippedMediaFiles) {
+      Logger.log(vid.getName());
+    }
+  }
 }

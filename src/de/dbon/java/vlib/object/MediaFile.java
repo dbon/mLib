@@ -1,7 +1,8 @@
 package de.dbon.java.vlib.object;
 
 
-public class Video {
+public class MediaFile {
+
 
   private long id;
   private String name;
@@ -11,12 +12,16 @@ public class Video {
   private String lastviewed;
   private int viewcount;
   private String tags;
+  private String hash;
+  private int toBeDeleted;
+  private int rating;
+  private int reviewed;
 
   @Override
   public String toString() {
-    return "Video [name=" + name + ", extension=" + extension + ", path=" + path + ", filesize="
-        + filesize + ", lastviewed=" + lastviewed + ", viewcount=" + viewcount + ", tags=" + tags
-        + "]";
+    return "MediaFile [id=" + id + ", name=" + name + ", extension=" + extension + ", path=" + path
+        + ", filesize=" + filesize + ", lastviewed=" + lastviewed + ", viewcount=" + viewcount
+        + ", tags=" + tags + ", hash=" + hash + "]";
   }
 
   public long getId() {
@@ -81,6 +86,38 @@ public class Video {
 
   public void setTags(String tags) {
     this.tags = tags;
+  }
+
+  public void setHash(String hash) {
+    this.hash = hash;
+  }
+
+  public String getHash() {
+    return this.hash;
+  }
+
+  public int getToBeDeleted() {
+    return toBeDeleted;
+  }
+
+  public void setToBeDeleted(int toBeDeleted) {
+    this.toBeDeleted = toBeDeleted;
+  }
+
+  public int getRating() {
+    return rating;
+  }
+
+  public void setRating(int rating) {
+    this.rating = rating;
+  }
+
+  public int getReviewed() {
+    return reviewed;
+  }
+
+  public void setReviewed(int reviewed) {
+    this.reviewed = reviewed;
   }
 
 

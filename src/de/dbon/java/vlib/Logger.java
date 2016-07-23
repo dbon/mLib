@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class Logger {
 
-  private static final String logFileName = "vlib.log";
+  public static final String logFileName = "vlib.log";
   private static File logFile = null;
 
   private static DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyy HH:mm:ss");
@@ -31,8 +31,12 @@ public class Logger {
       }
 
       PrintWriter out = new PrintWriter(new FileWriter(logFile, true));
-      out.println(dateFormat.format(new Date()) + " " + msg);
+      String output = dateFormat.format(new Date()) + " " + msg;
+      out.println(output);
       out.close();
+
+      Interface.log.append(output + "\n");
+      Interface.log.setCaretPosition(Interface.log.getDocument().getLength());
 
     } catch (FileNotFoundException ex) {
       ex.printStackTrace();

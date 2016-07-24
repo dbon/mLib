@@ -45,16 +45,8 @@ public class DatabaseWorker {
       Class.forName("org.sqlite.JDBC");
       Logger.log("creating database " + Configuration.databasePathAndFile);
       File dbFile = new File(Configuration.databasePathAndFile);
-
       Logger.log("open database " + Configuration.databasePathAndFile);
       con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databasePathAndFile);
-
-      if (!tableExists(con, Configuration.sqliteTable)) {
-        Logger.log("table " + Configuration.sqliteTable + " not existing.. creating it.");
-        createTable(con);
-        Interface.getInstance().showSelectScanDirDialog();
-      }
-
     } catch (Exception ex) {
       Logger.log(ex.getClass().getName() + ": " + ex.getMessage());
       ex.printStackTrace();
@@ -62,6 +54,12 @@ public class DatabaseWorker {
       return false;
     }
     Logger.log("database successfully opened");
+    if (!tableExists(con, Configuration.sqliteTable)) {
+      Logger.log("table " + Configuration.sqliteTable + " not existing.. creating it.");
+      createTable(con);
+      Logger.log("scan directory not found: user has to select it.");
+      Interface.getInstance().showSelectScanDirDialog();
+    }
     return true;
   }
 
@@ -84,14 +82,10 @@ public class DatabaseWorker {
               + " (name VARCHAR2(500) NOT NULL,"
               + " extension TEXT NOT NULL, path VARCHAR2(500) NOT NULL, filesize INT, lastviewed INT,"
               + " viewcount INT, tags VARCHAR2(500), hash VARCHAR2(250), toBeDeleted INT, rating INT, reviewed INT)";
-
-      Logger.log("sql:" + createTableQuery);
-
       Statement stmt;
-
       stmt = con.createStatement();
-
       Logger.log("creating table " + Configuration.sqliteTable);
+      Logger.log("sql:" + createTableQuery);
       stmt.executeUpdate(createTableQuery);
       stmt.close();
       con.close();

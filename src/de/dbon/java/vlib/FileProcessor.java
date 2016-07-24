@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import sun.awt.shell.ShellFolder;
 import de.dbon.java.vlib.object.MediaFile;
 
 public class FileProcessor implements Runnable {
@@ -141,13 +142,13 @@ public class FileProcessor implements Runnable {
   }
 
   private void scanFilesOnDisk(ArrayList<File> files) throws IOException, NoSuchAlgorithmException {
-    for (File file : files) {
 
+    for (File file : files) {
+      ShellFolder folder = ShellFolder.getShellFolder(file);
       // recursive call to deep fetch all media files
-      if (file.isDirectory()) {
+      if (file.isDirectory() && !folder.isLink()) {
         scanFilesOnDisk(new ArrayList<File>(Arrays.asList(file.listFiles())));
       } else {
-
         MediaFile mFile = new MediaFile();
 
         if (file.getName().contains(".")) {

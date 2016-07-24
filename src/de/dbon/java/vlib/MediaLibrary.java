@@ -2,6 +2,7 @@ package de.dbon.java.vlib;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,45 +42,88 @@ public class MediaLibrary {
 
     // when configuration file not exists
     if (!new File(Configuration.configurationFileName).exists()) {
+      Logger.log("configuration file " + Configuration.configurationFileName
+          + " not found: User has to select workspace path");
       Interface.getInstance().showSelectWorkspaceDialog(frame);
     } else {
-      // read database file name and path from configuration.ini
-      File configFile = new File(Configuration.configurationFileName);
-      if (configFile.length() > 0) {
-        BufferedReader br = new BufferedReader(new FileReader(configFile));
-        String line;
-        while ((line = br.readLine()) != null) {
-          if (line.contains(Configuration.configurationKeyDatabaseLocation)) {
-            String[] databaseLocationKeyValue = line.split("=");
-            // check if configuration.ini contains value for database location
-            if (databaseLocationKeyValue.length > 1) {
-              Configuration.databasePathAndFile = databaseLocationKeyValue[1];
-              DatabaseWorker.getInstance().openDatabase();
-              DatabaseWorker.getInstance().readLibraryIntoObjects();
-              Interface.getInstance().reloadFileTable();
-            } else {
-              Logger.log("configuration.ini does not contain a workspace location... select it!");
-              Interface.getInstance().showSelectWorkspaceDialog(frame);
-            }
-          } else {
-            Logger.log("Configuration.ini does not contain a key for workspace location.\n"
-                + "Add the following line to your configuration.ini: \n"
-                + "'database.location=<location_to_your_workspace>' \n"
-                + "or use Workspace Launcher Dialog");
-            Interface.getInstance().showSelectWorkspaceDialog(frame);
-          }
-        }
-      } else {
-        Logger.log("Configuration.ini does not containt a single line.");
-        Interface.getInstance().showSelectWorkspaceDialog(frame);
+      // read database file name and path from mlib.properties
+      switch (readPropertyFile()) {
+        case 0:
+          DatabaseWorker.getInstance().openDatabase();
+          DatabaseWorker.getInstance().readLibraryIntoObjects();
+          Interface.getInstance().reloadFileTable();
+          Interface.databaseLocation.setText(Configuration.databasePathAndFile);
+          break;
+        case -1:
+          Interface.getInstance().showSelectWorkspaceDialog(frame);
+          break;
+        case -2:
+          Interface.getInstance().showSelectWorkspaceDialog(frame);
+          break;
+        case -3:
+          Interface.getInstance().showSelectScanDirDialog();
+          break;
+        default:
+          break;
       }
-      Interface.databaseLocation.setText(Configuration.databasePathAndFile);
+
+      // if (line.contains(Configuration.configurationKeyDatabaseLocation)) {
+      // String[] databaseLocationKeyValue = line.split("=");
+      // check if configuration.ini contains value for database location
+      // if (databaseLocationKeyValue.length > 1) {
+      // Configuration.databasePathAndFile = databaseLocationKeyValue[1];
+
+      // } else {
+      // Logger.log("configuration.ini does not contain a workspace location... select it!");
+      // Interface.getInstance().showSelectWorkspaceDialog(frame);
+      // }
+      // } else {
+      // Logger.log("Configuration.ini does not contain a key for workspace location.\n"
+      // + "Add the following line to your configuration.ini: \n"
+      // + "'database.location=<location_to_your_workspace>' \n"
+      // + "or use Workspace Launcher Dialog");
+      // Interface.getInstance().showSelectWorkspaceDialog(frame);
+      // }
+      // }
+
+
     }
     // drop table for clean start (during development)
     // Connection con = DriverManager.getConnection("jdbc:sqlite:" + VLib.databaseFile);
     // if (SqliteConnector.tableExists(con, "vlib")) {
     // SqliteConnector.dropTable(databaseFile);
     // }
+  }
+
+
+  private static int readPropertyFile() throws FileNotFoundException, IOException {
+    int errorCode = 0;
+
+    File configFile = new File(Configuration.configurationFileName);
+    if (configFile.length() > 0) {
+      BufferedReader br = new BufferedReader(new FileReader(configFile));
+      String line;
+      while ((line = br.readLine()) != null) {
+        String[] property = line.split("=");
+        if (Configuration.configurationKeyDatabaseLocation.equals(property[0])) {
+          Configuration.databasePathAndFile = property[1];
+        } else if (Configuration.configurationKeyScanDir.equals(property[0])) {
+          Configuration.scanDir = property[1];
+        } else {
+          Logger.log("unknown property key: " + property[1]);
+        }
+      }
+      if ("".equals(Configuration.databasePathAndFile)) {
+        errorCode = -2;
+      }
+      if ("".equals(Configuration.scanDir)) {
+        errorCode = -3;
+      }
+    } else {
+      Logger.log("Configuration.ini does not containt a single line.");
+      errorCode = -1;
+    }
+    return errorCode;
   }
 
   private void removeDBFile() throws IOException {

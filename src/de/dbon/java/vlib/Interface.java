@@ -498,13 +498,14 @@ public class Interface implements ActionListener, MouseListener {
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
           File selectedDir = fc.getSelectedFile();
-          Configuration.scanDir = selectedDir.getAbsolutePath();
-          scandirPath.setText(Configuration.scanDir);
+          scandirPath.setText(selectedDir.getAbsolutePath());
         }
         break;
       case BUTTON_ACTION_COMMAND_SCANDIR_OK:
         try {
           selectScanDirDialog.dispose();
+          Configuration.scanDir = scandirPath.getText();
+          Logger.log("scan directory set to: " + Configuration.scanDir);
 
           File configFile = new File(Configuration.configurationFileName);
           FileWriter writer = new FileWriter(configFile, true);

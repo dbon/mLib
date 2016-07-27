@@ -43,10 +43,10 @@ public class DatabaseWorker {
     Connection con = null;
     try {
       Class.forName("org.sqlite.JDBC");
-      Logger.log("creating database " + Configuration.databasePathAndFile);
-      File dbFile = new File(Configuration.databasePathAndFile);
-      Logger.log("open database " + Configuration.databasePathAndFile);
-      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databasePathAndFile);
+      Logger.log("creating database " + Configuration.databaseDir);
+      File dbFile = new File(Configuration.databaseDir);
+      Logger.log("open database " + Configuration.databaseDir);
+      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
     } catch (Exception ex) {
       Logger.log(ex.getClass().getName() + ": " + ex.getMessage());
       ex.printStackTrace();
@@ -54,8 +54,8 @@ public class DatabaseWorker {
       return false;
     }
     Logger.log("database successfully opened");
-    if (!tableExists(con, Configuration.sqliteTable)) {
-      Logger.log("table " + Configuration.sqliteTable + " not existing.. creating it.");
+    if (!tableExists(con, Configuration.databaseTableName)) {
+      Logger.log("table " + Configuration.databaseTableName + " not existing.. creating it.");
       createTable(con);
       Logger.log("scan directory not found: user has to select it.");
       Interface.getInstance().showSelectScanDirDialog();
@@ -78,13 +78,13 @@ public class DatabaseWorker {
     try {
       String createTableQuery =
           "CREATE TABLE "
-              + Configuration.sqliteTable
+              + Configuration.databaseTableName
               + " (name VARCHAR2(500) NOT NULL,"
               + " extension TEXT NOT NULL, path VARCHAR2(500) NOT NULL, filesize INT, lastviewed INT,"
               + " viewcount INT, tags VARCHAR2(500), hash VARCHAR2(250), toBeDeleted INT, rating INT, reviewed INT)";
       Statement stmt;
       stmt = con.createStatement();
-      Logger.log("creating table " + Configuration.sqliteTable);
+      Logger.log("creating table " + Configuration.databaseTableName);
       Logger.log("sql:" + createTableQuery);
       stmt.executeUpdate(createTableQuery);
       stmt.close();
@@ -97,7 +97,7 @@ public class DatabaseWorker {
   public void insertMediaFile(MediaFile mFile, String databaseFile) {
     try {
       String insertQuery =
-          "INSERT INTO " + Configuration.sqliteTable + " values (? ,'" + mFile.getExtension()
+          "INSERT INTO " + Configuration.databaseTableName + " values (? ,'" + mFile.getExtension()
               + "',? ," + mFile.getFilesize() + ",'" + mFile.getLastviewed() + "',"
               + mFile.getViewcount() + ",'" + mFile.getTags() + "','" + mFile.getHash() + "','"
               + mFile.getRating() + "','" + mFile.getReviewed() + "','" + mFile.getToBeDeleted()
@@ -112,7 +112,7 @@ public class DatabaseWorker {
       stmt.close();
       con.close();
 
-      Interface.getInstance().reloadFileTable();
+      // Interface.getInstance().reloadFileTable();
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -120,9 +120,9 @@ public class DatabaseWorker {
 
   public void deleteMediaFile(String fileHash) {
     try {
-      String insertQuery = "DELETE FROM " + Configuration.sqliteTable + " WHERE hash=? ";
+      String insertQuery = "DELETE FROM " + Configuration.databaseTableName + " WHERE hash=? ";
       Connection con;
-      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databasePathAndFile);
+      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
       PreparedStatement stmt = con.prepareStatement(insertQuery);
       stmt.setString(1, fileHash);
       stmt.executeUpdate();
@@ -136,7 +136,7 @@ public class DatabaseWorker {
 
   public void dropTable(String databaseFile) {
     try {
-      String dropTableQuery = "DROP TABLE " + Configuration.sqliteTable;
+      String dropTableQuery = "DROP TABLE " + Configuration.databaseTableName;
       Logger.log("sql:" + dropTableQuery);
       Connection con;
       con = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
@@ -152,11 +152,10 @@ public class DatabaseWorker {
   public void readLibraryIntoObjects() {
     try {
       FileProcessor.sqliteFiles = new ArrayList<MediaFile>();
-      MediaLibrary.vLibCount = 0;
       Connection con;
-      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databasePathAndFile);
+      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
       Statement stmt = con.createStatement();
-      ResultSet rs = stmt.executeQuery("SELECT * FROM " + Configuration.sqliteTable);
+      ResultSet rs = stmt.executeQuery("SELECT * FROM " + Configuration.databaseTableName);
       while (rs.next()) {
         MediaFile vid = new MediaFile();
         vid.setName(rs.getString("name"));
@@ -171,10 +170,8 @@ public class DatabaseWorker {
         vid.setRating(rs.getInt("rating"));
         vid.setReviewed(rs.getInt("reviewed"));
 
-        MediaLibrary.vLibCount++;
-
-        MediaLibrary.vlibHashes =
-            MediaLibrary.vlibHashes
+        MediaLibrary.mLibHashes =
+            MediaLibrary.mLibHashes
                 + MediaLibrary.generateFileHash(rs.getString("name"), rs.getString("extension"),
                     rs.getString("filesize")) + ",";
 
@@ -191,18 +188,18 @@ public class DatabaseWorker {
   public void updateMediaFile(String hash, String updateFieldName, int newValue) {
     try {
       String insertQuery =
-          "UPDATE " + Configuration.sqliteTable + " SET " + updateFieldName + "='" + newValue
+          "UPDATE " + Configuration.databaseTableName + " SET " + updateFieldName + "='" + newValue
               + "' WHERE hash=? ";
       Connection con;
 
-      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databasePathAndFile);
+      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
 
       PreparedStatement stmt = con.prepareStatement(insertQuery);
       stmt.setString(1, hash);
       stmt.executeUpdate();
       stmt.close();
       con.close();
-      Interface.getInstance().reloadFileTable();
+      // Interface.getInstance().reloadFileTable();
     } catch (SQLException e) {
       e.printStackTrace();
     }

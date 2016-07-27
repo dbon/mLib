@@ -50,7 +50,7 @@ public class FileProcessor implements Runnable {
       // reads media files from hard drive and adds them to scannedMediaFiles
       scanFilesOnDisk(new ArrayList<File>(Arrays.asList(searchDir.listFiles())));
       // delta logic
-      importNewFiles(harddriveFiles, Configuration.databasePathAndFile, sqliteFiles);
+      importNewFiles(harddriveFiles, Configuration.databaseDir, sqliteFiles);
       fileIntegrityCheck();
       Interface.getInstance().reloadFileTable();
     } catch (NoSuchAlgorithmException | IOException e) {
@@ -67,7 +67,7 @@ public class FileProcessor implements Runnable {
     Logger.log("added files: " + addedCount);
     Logger.log("skipped relevant files: " + skippedMediaFileCount);
     Logger.log("ignored files by extension: " + ignoredFilesByExtension);
-    Logger.log("files in library: " + MediaLibrary.vLibCount);
+    Logger.log("files in library: " + MediaLibrary.mLibCount);
     Logger.log("files found on disk: " + MediaLibrary.diskCount);
     Logger.log("--------------------------------------------------");
   }
@@ -76,10 +76,10 @@ public class FileProcessor implements Runnable {
 
     vLibStatus();
 
-    if (MediaLibrary.vLibCount > MediaLibrary.diskCount) {
+    if (MediaLibrary.mLibCount > MediaLibrary.diskCount) {
       Logger.log("integrity check failed - scanning for deleted files");
       Logger.log("Reason: media files in library > media files on disk");
-      removeOutdatedFilesFromDB(harddriveFiles, Configuration.databasePathAndFile, sqliteFiles);
+      removeOutdatedFilesFromDB(harddriveFiles, Configuration.databaseDir, sqliteFiles);
       DatabaseWorker.getInstance().readLibraryIntoObjects();
       fileIntegrityCheck();
     } else {
@@ -91,17 +91,17 @@ public class FileProcessor implements Runnable {
       String databaseFile, ArrayList<MediaFile> mediaFileLibrary) throws SQLException {
     Logger.log("searching for outdated files...");
     int count = 0;
-    for (MediaFile vid : mediaFileLibrary) {
+    for (MediaFile mFile : mediaFileLibrary) {
       // is there a media file which is not on hard disc anymore?
-      if (!MediaLibrary.diskHashes.contains(vid.getHash())) {
+      if (!MediaLibrary.diskHashes.contains(mFile.getHash())) {
         // if yes delete it from db file
-        DatabaseWorker.getInstance().deleteMediaFile(vid.getHash());
-        Logger.log("file " + vid.getName() + " not found on disk, removing from db");
+        DatabaseWorker.getInstance().deleteMediaFile(mFile.getHash());
+        Logger.log("file " + mFile.getName() + " not found on disk, removing from db");
         count++;
       } else {
         Logger
             .log("file found in db... that means that we have duplicated files in db.. delete DB file and reInitialize!!!");
-        Logger.log("duplicat file: " + vid.toString());
+        Logger.log("duplicat file: " + mFile.toString());
       }
     }
 
@@ -127,12 +127,12 @@ public class FileProcessor implements Runnable {
 
       // Logger.log("processing scanned file with hash: " + vid.getHash());
 
-      if (!MediaLibrary.vlibHashes.contains(vid.getHash())) {
+      if (!MediaLibrary.mLibHashes.contains(vid.getHash())) {
         Logger.log("processing scanned file with hash: " + vid.getHash());
         DatabaseWorker.getInstance().insertMediaFile(vid, databaseFile);
         Logger.log("file not found in db, adding: " + vid.toString());
         addedCount++;
-        MediaLibrary.vLibCount++;
+        MediaLibrary.mLibCount++;
       } else {
         // Logger.log("media File already inserted, skipping.");
         skippedMediaFileCount++;
@@ -142,8 +142,8 @@ public class FileProcessor implements Runnable {
   }
 
   private void scanFilesOnDisk(ArrayList<File> files) throws IOException, NoSuchAlgorithmException {
-
     for (File file : files) {
+      Logger.log("scanning file " + file.getAbsolutePath());
       ShellFolder folder = ShellFolder.getShellFolder(file);
       // recursive call to deep fetch all media files
       if (file.isDirectory() && !folder.isLink()) {

@@ -14,7 +14,6 @@ import java.awt.event.MouseListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,7 +22,6 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -44,15 +42,16 @@ public class Interface implements ActionListener, MouseListener {
 
   private static Interface instance = null;
 
-  private JFrame frame;
+  private JFrame frame = new JFrame();
 
   private final String appTitle = "File Analyzer";
   private final String appVersion = "v0.1 alpha";
-  public JDialog selectDBDialog;
+  public JDialog selectDatabaseDialog;
   public JDialog selectScanDirDialog;
   public JTextField workspacePath;
-  public JTextField scandirPath;
-  public static JTextField databaseLocation;
+  public JTextField scandirPath = new JTextField();
+  public static JTextField databaseDir;
+  public static JTextField scanDir;
   public static A_DefaultTableModel tableModel;
 
   public static JTextArea log = new JTextArea(10, 100);
@@ -80,6 +79,7 @@ public class Interface implements ActionListener, MouseListener {
 
   public static final String BUTTON_ACTION_COMMAND_SCANDIR_BROWSE = "browse scan dir";
   public static final String BUTTON_ACTION_COMMAND_SCANDIR_OK = "save scan dir";
+  public static final String BUTTON_ACTION_COMMAND_SCANDIR_CHANGE = "change scan dir";
 
   public static final String BUTTON_ACTION_COMMAND_SYNCHRONIZATION = "sync library";
   public static final String BUTTON_ACTION_COMMAND_REFRESH_TABLE = "refresh table";
@@ -107,16 +107,46 @@ public class Interface implements ActionListener, MouseListener {
   public JFrame run() {
     initTableColumnNames();
     frame = new JFrame();
-    frame.setSize(1650, 800);
+    // frame.setSize(1650, 800);
     frame.setTitle(appTitle + " " + appVersion);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.setResizable(false);
 
     // NORTH
-    JPanel main = new JPanel();
-    main.add(new JLabel("Database Location: "));
-    databaseLocation = new JTextField(20);
-    databaseLocation.setEditable(false);
-    main.add(databaseLocation);
+    JPanel north = new JPanel();
+    north.setLayout(new GridBagLayout());
+
+    JPanel databaseDirPanel = new JPanel();
+    databaseDirPanel.add(new JLabel("Database Location: "));
+
+    databaseDir = new JTextField(30);
+    databaseDir.setEditable(false);
+    databaseDirPanel.add(databaseDir);
+
+    GridBagConstraints cNorth = new GridBagConstraints();
+    cNorth.anchor = GridBagConstraints.FIRST_LINE_START;
+    cNorth.gridx = 0;
+    cNorth.gridy = 0;
+    cNorth.weightx = 1;
+    cNorth.gridwidth = 1;
+    north.add(databaseDirPanel, cNorth);
+
+    JPanel scanDirPanel = new JPanel();
+    scanDirPanel.add(new JLabel("Scan Directory: "));
+
+    scanDir = new JTextField(30);
+    scanDir.setEditable(false);
+    scanDirPanel.add(scanDir);
+
+    cNorth.gridx = 1;
+    north.add(scanDirPanel, cNorth);
+
+    cNorth.gridx = 2;
+    cNorth.insets = new Insets(2, -10, 0, 0);
+    JButton buttonBrowseScanDir = new JButton("Change");
+    buttonBrowseScanDir.addActionListener(this);
+    buttonBrowseScanDir.setActionCommand(BUTTON_ACTION_COMMAND_SCANDIR_CHANGE);
+    north.add(buttonBrowseScanDir, cNorth);
 
     // CENTER
     tableModel = new A_DefaultTableModel(columnNames.keySet().toArray(), 0);
@@ -126,73 +156,113 @@ public class Interface implements ActionListener, MouseListener {
     fileTable.setAutoCreateRowSorter(true);
     fileTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
     fileTable.addMouseListener(this);
+    fileTable.setAutoscrolls(false);
     setColumnSizes();
     setColumnsAlignLeft();
 
     // EAST
+
+    JPanel east = new JPanel();
+    east.setLayout(new GridBagLayout());
+
+    GridBagConstraints cEast = new GridBagConstraints();
+    cEast.fill = GridBagConstraints.HORIZONTAL;
+    cEast.gridx = 0;
+    cEast.gridy = 0;
+    cEast.weightx = 0;
+    cEast.gridwidth = 0;
+
     JPanel optionPanel = new JPanel();
-    optionPanel.setLayout(new BoxLayout(optionPanel, BoxLayout.Y_AXIS));
+    // optionPanel.setLayout(new BoxLayout(optionPanel, BoxLayout.Y_AXIS));
     JButton syncButton = new JButton("Synchronize");
     syncButton.setActionCommand(BUTTON_ACTION_COMMAND_SYNCHRONIZATION);
     syncButton.addActionListener(this);
-    optionPanel.add(syncButton);
+    east.add(syncButton, cEast);
+    // optionPanel.add(syncButton);
 
+    cEast.gridy = 1;
     JButton refreshTableButton = new JButton("RefreshTable");
     refreshTableButton.setActionCommand(BUTTON_ACTION_COMMAND_REFRESH_TABLE);
     refreshTableButton.addActionListener(this);
-    optionPanel.add(refreshTableButton);
+    east.add(refreshTableButton, cEast);
+    // optionPanel.add(refreshTableButton);
 
+    cEast.gridy = 2;
     JButton openInExplorerTableButton = new JButton("Open in Explorer");
     openInExplorerTableButton.setActionCommand(BUTTON_ACTION_COMMAND_OPEN_IN_EXPLORER);
     openInExplorerTableButton.addActionListener(this);
-    optionPanel.add(openInExplorerTableButton);
+    east.add(openInExplorerTableButton, cEast);
+    // optionPanel.add(openInExplorerTableButton);
 
+    cEast.gridy = 3;
     JButton deleteButton = new JButton("Delete File");
     deleteButton.setActionCommand(BUTTON_ACTION_COMMAND_DELETE_FILE);
     deleteButton.addActionListener(this);
-    optionPanel.add(deleteButton);
+    east.add(deleteButton, cEast);
+    // optionPanel.add(deleteButton);
 
+    cEast.gridy = 4;
+    east.add(new JLabel("Rating:"), cEast);
+
+    cEast.gridy = 5;
     ratingAAAButton = new JButton("AAA");
-    ratingAAButton = new JButton("AA");
-    ratingAButton = new JButton("A");
-    ratingBButton = new JButton("B");
-    ratingCButton = new JButton("C");
-
     ratingAAAButton.addActionListener(this);
     ratingAAAButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    east.add(ratingAAAButton, cEast);
 
+    cEast.gridy = 6;
+    ratingAAButton = new JButton("AA");
     ratingAAButton.addActionListener(this);
     ratingAAButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    east.add(ratingAAButton, cEast);
 
+    cEast.gridy = 7;
+    ratingAButton = new JButton("A");
     ratingAButton.addActionListener(this);
     ratingAButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    east.add(ratingAButton, cEast);
 
+    cEast.gridy = 8;
+    ratingBButton = new JButton("B");
     ratingBButton.addActionListener(this);
     ratingBButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    east.add(ratingBButton, cEast);
 
+    cEast.gridy = 9;
+    ratingCButton = new JButton("C");
     ratingCButton.addActionListener(this);
     ratingCButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    east.add(ratingCButton, cEast);
 
-    optionPanel.add(ratingAAAButton);
-    optionPanel.add(ratingAAButton);
-    optionPanel.add(ratingAButton);
-    optionPanel.add(ratingBButton);
-    optionPanel.add(ratingCButton);
 
+    // optionPanel.add(ratingAAAButton);
+    // optionPanel.add(ratingAAButton);
+    // optionPanel.add(ratingAButton);
+    // optionPanel.add(ratingBButton);
+    // optionPanel.add(ratingCButton);
+
+    cEast.gridy = 10;
     JButton toBeDeletedButton = new JButton("Set toBeDeleted");
     toBeDeletedButton.addActionListener(this);
     toBeDeletedButton.setActionCommand(BUTTON_ACTION_COMMAND_SET_TOBEDELETED_);
-    optionPanel.add(toBeDeletedButton);
+    east.add(toBeDeletedButton, cEast);
+    // optionPanel.add(toBeDeletedButton);
 
+    cEast.gridy = 11;
     JButton setReviewedButton = new JButton("Set reviewed");
     setReviewedButton.addActionListener(this);
     setReviewedButton.setActionCommand(BUTTON_ACTION_COMMAND_SET_REVIEWD);
-    optionPanel.add(setReviewedButton);
+    east.add(setReviewedButton, cEast);
+    // optionPanel.add(setReviewedButton);
 
+    cEast.gridy = 12;
     JButton resetRowButton = new JButton("Reset Row");
     resetRowButton.addActionListener(this);
     resetRowButton.setActionCommand(BUTTON_ACTION_COMMAND_RESET_ROW);
-    optionPanel.add(resetRowButton);
+    east.add(resetRowButton, cEast);
+    // optionPanel.add(resetRowButton);
+
+    // east.add(optionPanel, cEast);
 
     // SOUTH
     log.setEditable(false);
@@ -203,11 +273,14 @@ public class Interface implements ActionListener, MouseListener {
     Rectangle rectangle = new Rectangle();
     scrollPane.scrollRectToVisible(rectangle);
 
-    frame.add(main, BorderLayout.NORTH);
+
+
+    frame.add(north, BorderLayout.NORTH);
     frame.add(new JScrollPane(fileTable), BorderLayout.CENTER);
-    frame.add(optionPanel, BorderLayout.EAST);
+    frame.add(east, BorderLayout.EAST);
     frame.add(scrollPane, BorderLayout.SOUTH);
     frame.setVisible(true);
+    frame.pack();
     return frame;
   }
 
@@ -252,20 +325,20 @@ public class Interface implements ActionListener, MouseListener {
 
   private void initTableColumnNames() {
     columnNames.put(Interface.COLUMN_NAME_NUMBER, 0);
-    columnNames.put(Interface.COLUMN_NAME_FILENAME, 1);
-    columnNames.put(Interface.COLUMN_NAME_FILEEXTENSION, 2);
-    columnNames.put(Interface.COLUMN_NAME_FILESIZE, 3);
-    columnNames.put(Interface.COLUMN_NAME_FILEPATH, 4);
-    columnNames.put(Interface.COLUMN_NAME_FILERATING, 5);
-    columnNames.put(Interface.COLUMN_NAME_REVIEWED, 6);
-    columnNames.put(Interface.COLUMN_NAME_TOBEDELTED, 7);
+    columnNames.put(Interface.COLUMN_NAME_FILERATING, 1);
+    columnNames.put(Interface.COLUMN_NAME_REVIEWED, 2);
+    columnNames.put(Interface.COLUMN_NAME_TOBEDELTED, 3);
+    columnNames.put(Interface.COLUMN_NAME_FILENAME, 4);
+    columnNames.put(Interface.COLUMN_NAME_FILEEXTENSION, 5);
+    columnNames.put(Interface.COLUMN_NAME_FILESIZE, 6);
+    columnNames.put(Interface.COLUMN_NAME_FILEPATH, 7);
   }
 
-  public void showSelectWorkspaceDialog(JFrame frame) {
-    selectDBDialog = new JDialog();
-    selectDBDialog.setSize(600, 200);
-    selectDBDialog.setLocationRelativeTo(frame);
-    selectDBDialog.setTitle("Workspace Launcher");
+  public void showSelectWorkspaceDialog() {
+    selectDatabaseDialog = new JDialog();
+    selectDatabaseDialog.setSize(600, 200);
+    selectDatabaseDialog.setLocationRelativeTo(frame);
+    selectDatabaseDialog.setTitle("Workspace Launcher");
 
     JPanel panel = new JPanel();
     panel.setLayout(new GridBagLayout());
@@ -336,8 +409,8 @@ public class Interface implements ActionListener, MouseListener {
     okButton.addActionListener(this);
     panel.add(okButton, c);
 
-    selectDBDialog.add(panel);
-    selectDBDialog.setVisible(true);
+    selectDatabaseDialog.add(panel);
+    selectDatabaseDialog.setVisible(true);
   }
 
   public void showSelectScanDirDialog() {
@@ -384,7 +457,6 @@ public class Interface implements ActionListener, MouseListener {
     c.fill = GridBagConstraints.BOTH;
     c.insets = new Insets(15, 10, 0, 0);
     // c.anchor = GridBagConstraints.CENTER;
-    scandirPath = new JTextField();
     panel.add(scandirPath, c);
 
     c.gridx = 1;
@@ -466,29 +538,15 @@ public class Interface implements ActionListener, MouseListener {
         }
         break;
       case BUTTON_ACTION_COMMAND_WORKSPACE_OK:
-        try {
-          Configuration.databasePath = workspacePath.getText();
-          Configuration.databasePathAndFile =
-              Configuration.databasePath + "\\" + Configuration.defaultDatabaseFile;
-          selectDBDialog.dispose();
-          databaseLocation.setText(Configuration.databasePath);
+        Configuration.databaseDir = workspacePath.getText() + "\\" + Configuration.databaseFileName;
+        databaseDir.setText(Configuration.databaseDir);
+        selectDatabaseDialog.dispose();
+        Configuration.setConfigurationProperty(Configuration.propertyKeyWorkspaceDir,
+            Configuration.databaseDir);
 
-          File configFile = new File(Configuration.configurationFileName);
-          configFile.createNewFile();
-
-          FileWriter writer;
-          writer = new FileWriter(configFile);
-
-          writer.write(Configuration.configurationKeyDatabaseLocation + "="
-              + Configuration.databasePathAndFile + "\n");
-          writer.close();
-
-          DatabaseWorker.getInstance().openDatabase();
-          DatabaseWorker.getInstance().readLibraryIntoObjects();
-          Interface.getInstance().reloadFileTable();
-        } catch (IOException e2) {
-          e2.printStackTrace();
-        }
+        DatabaseWorker.getInstance().openDatabase();
+        // DatabaseWorker.getInstance().readLibraryIntoObjects();
+        Interface.getInstance().reloadFileTable();
         break;
       case BUTTON_ACTION_COMMAND_SCANDIR_BROWSE:
 
@@ -502,21 +560,17 @@ public class Interface implements ActionListener, MouseListener {
         }
         break;
       case BUTTON_ACTION_COMMAND_SCANDIR_OK:
-        try {
-          selectScanDirDialog.dispose();
-          Configuration.scanDir = scandirPath.getText();
-          Logger.log("scan directory set to: " + Configuration.scanDir);
+        Configuration.scanDir = scandirPath.getText();
+        scanDir.setText(scandirPath.getText());
+        selectScanDirDialog.dispose();
 
-          File configFile = new File(Configuration.configurationFileName);
-          FileWriter writer = new FileWriter(configFile, true);
-          writer.append(Configuration.configurationKeyScanDir + "=" + Configuration.scanDir);
-          writer.close();
+        Configuration.setConfigurationProperty(Configuration.propertyKeyScanDir,
+            Configuration.scanDir);
 
-          DatabaseWorker.getInstance().readLibraryIntoObjects();
-          Interface.getInstance().reloadFileTable();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+        Interface.getInstance().reloadFileTable();
+        break;
+      case BUTTON_ACTION_COMMAND_SCANDIR_CHANGE:
+        showSelectScanDirDialog();
         break;
       case BUTTON_ACTION_COMMAND_SYNCHRONIZATION:
         if (DatabaseWorker.getInstance().openDatabase()) {
@@ -578,7 +632,9 @@ public class Interface implements ActionListener, MouseListener {
             int rating = 0;
             int countToNextRow = 1;
             do {
-              rating = (int) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow, 5);
+              rating =
+                  (int) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
+                      Interface.columnNames.get(COLUMN_NAME_FILERATING));
               if (rating == 0) {
                 nextRow = selectedRow + countToNextRow;
               } else {
@@ -717,10 +773,10 @@ public class Interface implements ActionListener, MouseListener {
 
     int count = 1;
     for (MediaFile v : FileProcessor.sqliteFiles) {
-      Object[] o =
-          {count, v.getName(), v.getExtension(), v.getFilesize(), v.getPath(), v.getRating(),
-              v.getReviewed(), v.getToBeDeleted()};
-      tableModel.addRow(o);
+      Object[] tableColumns =
+          {count, v.getRating(), v.getReviewed(), v.getToBeDeleted(), v.getName(),
+              v.getExtension(), v.getFilesize(), v.getPath()};
+      tableModel.addRow(tableColumns);
       count++;
     }
 
@@ -741,7 +797,9 @@ public class Interface implements ActionListener, MouseListener {
       // e1.printStackTrace();
       // }
 
-      String filePath = fileTable.getValueAt(fileTable.getSelectedRow(), 4).toString();
+      String filePath =
+          fileTable.getValueAt(fileTable.getSelectedRow(),
+              Interface.columnNames.get(COLUMN_NAME_FILEPATH)).toString();
       Logger.log("opening file " + filePath);
 
       // use -f as second parameter for fullscreen

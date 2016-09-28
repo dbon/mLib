@@ -13,6 +13,7 @@ import java.util.Properties;
 public class Configuration {
   public static final String propertyKeyWorkspaceDir = "databaseDir";
   public static final String propertyKeyScanDir = "scanDir";
+  public static final String propertyKeyExtensions = "extensions";
 
   public static final String propertiesFileName = "mlib.properties";
 
@@ -22,7 +23,7 @@ public class Configuration {
   public static String databaseDir = "";
   public static String scanDir = "";
 
-  public static String allowedExtensions = ".mp4,.mpg,.avi,.flv,.wmv,.mov,.mpeg,.mpg,.divx,.mkv";
+  public static String extensions = "";
 
   public static String unsupportedExtensions = "";
   public static String suspiciousFiles = "";
@@ -52,6 +53,7 @@ public class Configuration {
 
       Configuration.databaseDir = prop.getProperty(Configuration.propertyKeyWorkspaceDir);
       Configuration.scanDir = prop.getProperty(Configuration.propertyKeyScanDir);
+      Configuration.extensions = prop.getProperty(Configuration.propertyKeyExtensions);
 
       if (Configuration.databaseDir != null && !"".equals(Configuration.databaseDir)) {
         Interface.databaseDir.setText(Configuration.databaseDir);
@@ -64,6 +66,10 @@ public class Configuration {
         Interface.scanDir.setText(Configuration.scanDir);
       } else {
         Interface.getInstance().showSelectScanDirDialog();
+      }
+      
+      if (Configuration.extensions == null || "".equals(Configuration.extensions)) {
+        Interface.getInstance().showFileExtensionDialog();
       }
 
       Configuration.init();

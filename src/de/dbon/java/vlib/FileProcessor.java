@@ -1,6 +1,7 @@
 package de.dbon.java.vlib;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -144,7 +145,16 @@ public class FileProcessor implements Runnable {
   private void scanFilesOnDisk(ArrayList<File> files) throws IOException, NoSuchAlgorithmException {
     for (File file : files) {
       Logger.log("scanning file " + file.getAbsolutePath());
-      ShellFolder folder = ShellFolder.getShellFolder(file);
+      
+      ShellFolder folder = null;
+      try{
+      folder = ShellFolder.getShellFolder(file);
+      }
+      catch(FileNotFoundException e){
+    	  Logger.log("file not found: " + file.getAbsolutePath());
+    	  continue;
+      }
+      
       // recursive call to deep fetch all media files
       if (file.isDirectory() && !folder.isLink()) {
         scanFilesOnDisk(new ArrayList<File>(Arrays.asList(file.listFiles())));
@@ -158,7 +168,7 @@ public class FileProcessor implements Runnable {
           continue;
         }
 
-        if (Configuration.allowedExtensions.toLowerCase().contains(
+        if (Configuration.extensions.toLowerCase().contains(
             mFile.getExtension().toLowerCase())) {
           mFile.setName(file.getName().substring(0, file.getName().lastIndexOf(".")));
 

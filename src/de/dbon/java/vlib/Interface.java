@@ -691,6 +691,8 @@ public class Interface implements ActionListener, MouseListener {
         break;
       case BUTTON_ACTION_COMMAND_RATING:
         try {
+
+          Logger.log("isRowSelected:" + isRowSelected);
           if (isRowSelected) {
             Runtime.getRuntime().exec("taskkill /F /IM vlc.exe");
             Thread.sleep(500);
@@ -704,6 +706,7 @@ public class Interface implements ActionListener, MouseListener {
               rating =
                   (int) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
                       Interface.columnNames.get(COLUMN_NAME_FILERATING));
+              Logger.log("rating:" + rating);
               if (rating == 0) {
                 nextRow = selectedRow + countToNextRow;
               } else {
@@ -721,6 +724,8 @@ public class Interface implements ActionListener, MouseListener {
                 DatabaseWorker.updateFieldReviewed, 1);
 
             fileTable.setRowSelectionInterval(nextRow, nextRow);
+
+            reloadFileTable();
 
             Logger.log("opening file " + filePath);
             ProcessBuilder pb = new ProcessBuilder(Configuration.vlcLocation, filePath);
@@ -746,6 +751,8 @@ public class Interface implements ActionListener, MouseListener {
           DatabaseWorker.getInstance().updateMediaFile(
               MediaLibrary.generateFileHash(fileName, fileExtension, fileSize),
               DatabaseWorker.updateFieldReviewed, 1);
+
+          reloadFileTable();
         }
         break;
       case BUTTON_ACTION_COMMAND_SET_REVIEWD:
@@ -759,6 +766,8 @@ public class Interface implements ActionListener, MouseListener {
           DatabaseWorker.getInstance().updateMediaFile(
               MediaLibrary.generateFileHash(fileName, fileExtension, fileSize),
               DatabaseWorker.updateFieldReviewed, fileReviewd);
+
+          reloadFileTable();
         }
         break;
       case BUTTON_ACTION_COMMAND_RESET_ROW:
@@ -774,6 +783,7 @@ public class Interface implements ActionListener, MouseListener {
               DatabaseWorker.updateFieldReviewed, 0);
 
           fileTable.setRowSelectionInterval(selectedRow + 1, selectedRow + 1);
+          reloadFileTable();
         }
         break;
       case BUTTON_ACTION_COMMAND_FILEEXTENSIONS_OK:

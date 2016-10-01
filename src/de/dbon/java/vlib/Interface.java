@@ -644,6 +644,7 @@ public class Interface implements ActionListener, MouseListener {
         if (DatabaseWorker.getInstance().openDatabase()) {
           Thread thread = null;
           try {
+            Logger.log("### SYNCHRONIZATION");
             thread = new Thread(new FileProcessor(Configuration.scanDir));
           } catch (NoSuchAlgorithmException | IOException | SQLException e1) {
             e1.printStackTrace();
@@ -776,11 +777,11 @@ public class Interface implements ActionListener, MouseListener {
         }
         break;
       case BUTTON_ACTION_COMMAND_FILEEXTENSIONS_OK:
-        Configuration.extensions = fileExtensionList.getText();
+        Configuration.allowedExtensions = fileExtensionList.getText();
         selectFileExtenstionDialog.dispose();
         Logger.log("set allowed extensions to: " + fileExtensionList.getText());
         Configuration.setConfigurationProperty(Configuration.propertyKeyExtensions,
-            Configuration.extensions);
+            Configuration.allowedExtensions);
         break;
       default:
         break;
@@ -946,7 +947,7 @@ public class Interface implements ActionListener, MouseListener {
     c.insets = new Insets(15, 10, 0, 15);
     // c.anchor = GridBagConstraints.CENTER;
     fileExtensionList = new JTextField();
-    fileExtensionList.setText(Configuration.extensions);
+    fileExtensionList.setText(Configuration.allowedExtensions);
     fileExtensionList.grabFocus();
     panel.add(fileExtensionList, c);
 

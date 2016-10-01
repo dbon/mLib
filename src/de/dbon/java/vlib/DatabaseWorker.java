@@ -150,6 +150,7 @@ public class DatabaseWorker {
   }
 
   public void readLibraryIntoObjects() {
+    MediaLibrary.mLibCount = 0;
     try {
       FileProcessor.sqliteFiles = new ArrayList<MediaFile>();
       Connection con;
@@ -176,6 +177,7 @@ public class DatabaseWorker {
                     rs.getString("filesize")) + ",";
 
         FileProcessor.sqliteFiles.add(vid);
+        MediaLibrary.mLibCount++;
       }
       rs.close();
       stmt.close();

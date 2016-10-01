@@ -145,16 +145,15 @@ public class FileProcessor implements Runnable {
   private void scanFilesOnDisk(ArrayList<File> files) throws IOException, NoSuchAlgorithmException {
     for (File file : files) {
       Logger.log("scanning file " + file.getAbsolutePath());
-      
+
       ShellFolder folder = null;
-      try{
-      folder = ShellFolder.getShellFolder(file);
+      try {
+        folder = ShellFolder.getShellFolder(file);
+      } catch (FileNotFoundException e) {
+        Logger.log("file not found: " + file.getAbsolutePath());
+        continue;
       }
-      catch(FileNotFoundException e){
-    	  Logger.log("file not found: " + file.getAbsolutePath());
-    	  continue;
-      }
-      
+
       // recursive call to deep fetch all media files
       if (file.isDirectory() && !folder.isLink()) {
         scanFilesOnDisk(new ArrayList<File>(Arrays.asList(file.listFiles())));
@@ -162,14 +161,17 @@ public class FileProcessor implements Runnable {
         MediaFile mFile = new MediaFile();
 
         if (file.getName().contains(".")) {
-          mFile.setExtension(file.getName().substring(file.getName().lastIndexOf(".")));
+          mFile.setExtension(file.getName().substring(file.getName().lastIndexOf(".") + 1));
         } else {
           Configuration.suspiciousFiles += file.getPath() + ",";
           continue;
         }
 
-        if (Configuration.extensions.toLowerCase().contains(
-            mFile.getExtension().toLowerCase())) {
+        // TODO: remove sysout
+        System.out.println("unsupportedExtensions: " + Configuration.extensions);
+        System.out.println("currentFile:" + mFile.getExtension().toLowerCase());
+
+        if (Configuration.extensions.toLowerCase().contains(mFile.getExtension().toLowerCase())) {
           mFile.setName(file.getName().substring(0, file.getName().lastIndexOf(".")));
 
           mFile.setPath(file.getAbsolutePath().replace("?", ""));

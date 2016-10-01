@@ -22,7 +22,6 @@ public class Configuration {
 
   public static String databaseDir = "";
   public static String scanDir = "";
-
   public static String extensions = "";
 
   public static String unsupportedExtensions = "";
@@ -67,8 +66,9 @@ public class Configuration {
       } else {
         Interface.getInstance().showSelectScanDirDialog();
       }
-      
+
       if (Configuration.extensions == null || "".equals(Configuration.extensions)) {
+        extensions = "mp4,mkv,mov,mpg,wmv,flv,avi";
         Interface.getInstance().showFileExtensionDialog();
       }
 

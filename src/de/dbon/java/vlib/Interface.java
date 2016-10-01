@@ -430,6 +430,7 @@ public class Interface implements ActionListener, MouseListener {
     c.insets = new Insets(15, 10, 0, 0);
     // c.anchor = GridBagConstraints.CENTER;
     workspacePath = new JTextField();
+    workspacePath.setText("C:\\Users\\Daniel\\workspace\\mLib");
     panel.add(workspacePath, c);
 
     c.gridx = 1;
@@ -508,6 +509,7 @@ public class Interface implements ActionListener, MouseListener {
     c.fill = GridBagConstraints.BOTH;
     c.insets = new Insets(15, 10, 0, 0);
     // c.anchor = GridBagConstraints.CENTER;
+    scandirPath.setText("C:\\Users\\Daniel\\Downloads");
     panel.add(scandirPath, c);
 
     c.gridx = 1;
@@ -629,7 +631,7 @@ public class Interface implements ActionListener, MouseListener {
         Configuration.scanDir = scandirPath.getText();
         scanDir.setText(scandirPath.getText());
         selectScanDirDialog.dispose();
-
+        Logger.log("set scandir to: " + scanDir.getText());
         Configuration.setConfigurationProperty(Configuration.propertyKeyScanDir,
             Configuration.scanDir);
 
@@ -776,6 +778,7 @@ public class Interface implements ActionListener, MouseListener {
       case BUTTON_ACTION_COMMAND_FILEEXTENSIONS_OK:
         Configuration.extensions = fileExtensionList.getText();
         selectFileExtenstionDialog.dispose();
+        Logger.log("set allowed extensions to: " + fileExtensionList.getText());
         Configuration.setConfigurationProperty(Configuration.propertyKeyExtensions,
             Configuration.extensions);
         break;
@@ -903,7 +906,6 @@ public class Interface implements ActionListener, MouseListener {
     selectFileExtenstionDialog.setSize(600, 200);
     selectFileExtenstionDialog.setLocationRelativeTo(frame);
     selectFileExtenstionDialog.setTitle("Scanned File Extensions");
-
 
     JPanel panel = new JPanel();
     panel.setLayout(new GridBagLayout());

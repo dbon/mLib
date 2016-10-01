@@ -102,7 +102,7 @@ public class Interface implements ActionListener, MouseListener {
   public static final String BUTTON_ACTION_COMMAND_SET_TOBEDELETED_ = "set to be delted";
   public static final String BUTTON_ACTION_COMMAND_SET_REVIEWD = "set reviewed";
   private static final String BUTTON_ACTION_COMMAND_RESET_ROW = "reset row";
-  
+
   public static final String BUTTON_ACTION_COMMAND_FILEEXTENSIONS_OK = "save file extensions";
 
   boolean isRowSelected = false;
@@ -177,10 +177,10 @@ public class Interface implements ActionListener, MouseListener {
     fileTable.addMouseListener(this);
     fileTable.setAutoscrolls(false);
     setColumnSizes();
+    setColumnsHeaderAlignLeft();
     setColumnsAlignLeft();
 
     // EAST
-
     JPanel east = new JPanel();
     east.setLayout(new GridBagLayout());
 
@@ -303,6 +303,14 @@ public class Interface implements ActionListener, MouseListener {
     return frame;
   }
 
+  private void setColumnsHeaderAlignLeft() {
+    DefaultTableCellRenderer renderer =
+        (DefaultTableCellRenderer) fileTable.getTableHeader().getDefaultRenderer();
+    renderer.setHorizontalAlignment(SwingConstants.LEFT);
+    fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_NUMBER))
+        .setHeaderRenderer(renderer);
+  }
+
   private JMenuBar createMenu() {
     menuBar = new JMenuBar();
     menu = new JMenu("Einstellungen");
@@ -346,6 +354,7 @@ public class Interface implements ActionListener, MouseListener {
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_TOBEDELTED))
         .setCellRenderer(leftRenderer);
   }
+
 
   private void setColumnSizes() {
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_NUMBER)).setPreferredWidth(50);
@@ -401,8 +410,9 @@ public class Interface implements ActionListener, MouseListener {
     c.anchor = GridBagConstraints.LINE_START;
     c.insets = new Insets(10, 10, 0, 0);
 
-    JTextArea textArea = new JTextArea(
-        "Select a location where the database file will be stored.\nAll important configurations are saved inside this file.");
+    JTextArea textArea =
+        new JTextArea(
+            "Select a location where the database file will be stored.\nAll important configurations are saved inside this file.");
     textArea.setEditable(false);
     textArea.setLineWrap(true);
     textArea.setSize(600, 200);
@@ -479,8 +489,9 @@ public class Interface implements ActionListener, MouseListener {
     c.anchor = GridBagConstraints.LINE_START;
     c.insets = new Insets(10, 10, 0, 0);
 
-    JTextArea textArea = new JTextArea(
-        "Select a location where the App should search for files matching the allowed extension patterns. ");
+    JTextArea textArea =
+        new JTextArea(
+            "Select a location where the App should search for files matching the allowed extension patterns. ");
     textArea.setEditable(false);
     textArea.setLineWrap(true);
     textArea.setSize(600, 200);
@@ -687,8 +698,9 @@ public class Interface implements ActionListener, MouseListener {
             int rating = 0;
             int countToNextRow = 1;
             do {
-              rating = (int) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
-                  Interface.columnNames.get(COLUMN_NAME_FILERATING));
+              rating =
+                  (int) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
+                      Interface.columnNames.get(COLUMN_NAME_FILERATING));
               if (rating == 0) {
                 nextRow = selectedRow + countToNextRow;
               } else {
@@ -762,7 +774,7 @@ public class Interface implements ActionListener, MouseListener {
         }
         break;
       case BUTTON_ACTION_COMMAND_FILEEXTENSIONS_OK:
-        Configuration.extensions = fileExtensionList.getText();        
+        Configuration.extensions = fileExtensionList.getText();
         selectFileExtenstionDialog.dispose();
         Configuration.setConfigurationProperty(Configuration.propertyKeyExtensions,
             Configuration.extensions);
@@ -778,9 +790,8 @@ public class Interface implements ActionListener, MouseListener {
   }
 
   private String getFilenameOfSelectedRow() {
-    return fileTable
-        .getValueAt(fileTable.getSelectedRow(), columnNames.get(Interface.COLUMN_NAME_FILENAME))
-        .toString();
+    return fileTable.getValueAt(fileTable.getSelectedRow(),
+        columnNames.get(Interface.COLUMN_NAME_FILENAME)).toString();
   }
 
   private String getFileExtensionOfSelectedRow() {
@@ -789,15 +800,13 @@ public class Interface implements ActionListener, MouseListener {
   }
 
   private String getFilesizeOfSelectedRow() {
-    return fileTable
-        .getValueAt(fileTable.getSelectedRow(), columnNames.get(Interface.COLUMN_NAME_FILESIZE))
-        .toString();
+    return fileTable.getValueAt(fileTable.getSelectedRow(),
+        columnNames.get(Interface.COLUMN_NAME_FILESIZE)).toString();
   }
 
   private String getFilepathOfSelectedRow() {
-    return fileTable
-        .getValueAt(fileTable.getSelectedRow(), columnNames.get(Interface.COLUMN_NAME_FILEPATH))
-        .toString();
+    return fileTable.getValueAt(fileTable.getSelectedRow(),
+        columnNames.get(Interface.COLUMN_NAME_FILEPATH)).toString();
   }
 
   private int getToBeDeletedOfSelectedRow() {
@@ -836,8 +845,9 @@ public class Interface implements ActionListener, MouseListener {
 
     int count = 1;
     for (MediaFile v : FileProcessor.sqliteFiles) {
-      Object[] tableColumns = {count, v.getRating(), v.getReviewed(), v.getToBeDeleted(),
-          v.getName(), v.getExtension(), v.getFilesize(), v.getPath()};
+      Object[] tableColumns =
+          {count, v.getRating(), v.getReviewed(), v.getToBeDeleted(), v.getName(),
+              v.getExtension(), v.getFilesize(), v.getPath()};
       tableModel.addRow(tableColumns);
       count++;
     }
@@ -859,9 +869,9 @@ public class Interface implements ActionListener, MouseListener {
       // e1.printStackTrace();
       // }
 
-      String filePath = fileTable
-          .getValueAt(fileTable.getSelectedRow(), Interface.columnNames.get(COLUMN_NAME_FILEPATH))
-          .toString();
+      String filePath =
+          fileTable.getValueAt(fileTable.getSelectedRow(),
+              Interface.columnNames.get(COLUMN_NAME_FILEPATH)).toString();
       Logger.log("opening file " + filePath);
 
       // use -f as second parameter for fullscreen
@@ -893,7 +903,7 @@ public class Interface implements ActionListener, MouseListener {
     selectFileExtenstionDialog.setSize(600, 200);
     selectFileExtenstionDialog.setLocationRelativeTo(frame);
     selectFileExtenstionDialog.setTitle("Scanned File Extensions");
-    
+
 
     JPanel panel = new JPanel();
     panel.setLayout(new GridBagLayout());
@@ -914,8 +924,9 @@ public class Interface implements ActionListener, MouseListener {
     c.anchor = GridBagConstraints.LINE_START;
     c.insets = new Insets(10, 10, 0, 0);
 
-    JTextArea textArea = new JTextArea(
-        "Add a comma seperated list of file extensions like: \"mp3,mp4,mov,jpg,png\".\nAll listed file extensions will be scanned.");
+    JTextArea textArea =
+        new JTextArea(
+            "Add a comma seperated list of file extensions like: \"mp3,mp4,mov,jpg,png\".\nAll listed file extensions will be scanned.");
     textArea.setEditable(false);
     textArea.setLineWrap(true);
     textArea.setSize(600, 200);
@@ -955,10 +966,10 @@ public class Interface implements ActionListener, MouseListener {
     selectFileExtenstionDialog.getRootPane().setDefaultButton(okButton);
     selectFileExtenstionDialog.add(panel);
     selectFileExtenstionDialog.setVisible(true);
-    
+
     // set focus to text field
-    SwingUtilities.invokeLater(new Runnable(){
-      public void run(){
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
         fileExtensionList.requestFocusInWindow();
       }
     });

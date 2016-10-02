@@ -37,14 +37,20 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
 import de.dbon.java.vlib.object.MediaFile;
 
-public class Interface implements ActionListener, MouseListener {
+public class Interface implements ActionListener, MouseListener, DocumentListener {
 
   private static Interface instance = null;
 
@@ -61,6 +67,8 @@ public class Interface implements ActionListener, MouseListener {
   public static JTextField databaseDir;
   public static JTextField scanDir;
   public static A_DefaultTableModel tableModel;
+  public static JTextField searchBar;
+  public static JLabel filterCount;
 
   public static JTextArea log = new JTextArea(10, 100);
   public static JTable fileTable;
@@ -152,6 +160,7 @@ public class Interface implements ActionListener, MouseListener {
     north.add(databaseDirPanel, cNorth);
 
     JPanel scanDirPanel = new JPanel();
+    // scanDirPanel.setBackground(Color.green);
     scanDirPanel.add(new JLabel("Scan Directory: "));
 
     scanDir = new JTextField(30);
@@ -162,11 +171,28 @@ public class Interface implements ActionListener, MouseListener {
     north.add(scanDirPanel, cNorth);
 
     cNorth.gridx = 2;
-    cNorth.insets = new Insets(2, -10, 0, 0);
+    cNorth.insets = new Insets(2, -70, 0, 0);
     JButton buttonBrowseScanDir = new JButton("Change");
     buttonBrowseScanDir.addActionListener(this);
     buttonBrowseScanDir.setActionCommand(BUTTON_ACTION_COMMAND_SCANDIR_CHANGE);
     north.add(buttonBrowseScanDir, cNorth);
+
+
+    cNorth.gridx = 0;
+    cNorth.gridy = 1;
+    cNorth.gridwidth = 2;
+    cNorth.insets = new Insets(0, 0, 0, 0);
+    JPanel searchBarPanel = new JPanel();
+
+    searchBarPanel.add(new JLabel("Filter: "));
+    searchBar = new JTextField(85);
+    searchBar.setEditable(true);
+    searchBar.getDocument().addDocumentListener(this);
+    searchBarPanel.add(searchBar);
+
+    filterCount = new JLabel("Rows: ");
+    searchBarPanel.add(filterCount);
+    north.add(searchBarPanel, cNorth);
 
     // CENTER
     tableModel = new A_DefaultTableModel(columnNames.keySet().toArray(), 0);
@@ -866,7 +892,18 @@ public class Interface implements ActionListener, MouseListener {
       tableModel.addRow(tableColumns);
       count++;
     }
+    filterCount.setText("Rows: " + fileTable.getRowCount());
+  }
 
+  /*
+   * filters the jTable to the values entered in searchBar
+   */
+  public void filterFileTable() {
+    TableRowSorter<TableModel> sorter =
+        new TableRowSorter<TableModel>(((DefaultTableModel) fileTable.getModel()));
+    sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchBar.getText()));
+    fileTable.setRowSorter(sorter);
+    filterCount.setText("Rows: " + fileTable.getRowCount());
   }
 
   @Override
@@ -987,6 +1024,19 @@ public class Interface implements ActionListener, MouseListener {
         fileExtensionList.requestFocusInWindow();
       }
     });
+  }
+
+  @Override
+  public void changedUpdate(DocumentEvent arg0) {}
+
+  @Override
+  public void insertUpdate(DocumentEvent arg0) {
+    filterFileTable();
+  }
+
+  @Override
+  public void removeUpdate(DocumentEvent arg0) {
+    filterFileTable();
   }
 
 

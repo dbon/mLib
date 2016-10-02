@@ -685,18 +685,22 @@ public class Interface implements ActionListener, MouseListener {
       case BUTTON_ACTION_COMMAND_RATING:
         try {
           if (isRowSelected) {
-            Runtime.getRuntime().exec("taskkill /F /IM vlc.exe");
-            Thread.sleep(500);
 
             int ratingNumber = Configuration.ratings.get(((JButton) event.getSource()).getText());
             int nextRow = 0;
 
             int rating = 0;
             int countToNextRow = 1;
+            String nextFilePath = "";
             do {
               rating =
                   (int) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
                       Interface.columnNames.get(COLUMN_NAME_FILERATING));
+
+              nextFilePath =
+                  (String) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
+                      Interface.columnNames.get(COLUMN_NAME_FILEPATH));
+
               if (rating == 0) {
                 nextRow = selectedRow + countToNextRow;
               } else {
@@ -704,6 +708,8 @@ public class Interface implements ActionListener, MouseListener {
               }
               countToNextRow++;
             } while (rating != 0);
+
+            Logger.log("nextRow=" + nextRow);
 
             DatabaseWorker.getInstance().updateMediaFile(
                 MediaLibrary.generateFileHash(fileName, fileExtension, fileSize),
@@ -713,12 +719,14 @@ public class Interface implements ActionListener, MouseListener {
                 MediaLibrary.generateFileHash(fileName, fileExtension, fileSize),
                 DatabaseWorker.updateFieldReviewed, 1);
 
+            reloadFileTable();
             fileTable.setRowSelectionInterval(nextRow, nextRow);
 
-            reloadFileTable();
+            Runtime.getRuntime().exec("taskkill /F /IM vlc.exe");
+            Thread.sleep(500);
 
-            Logger.log("opening file " + filePath);
-            ProcessBuilder pb = new ProcessBuilder(Configuration.vlcLocation, filePath);
+            Logger.log("opening file " + nextFilePath);
+            ProcessBuilder pb = new ProcessBuilder(Configuration.vlcLocation, nextFilePath);
             pb.start();
           }
         } catch (IOException e1) {

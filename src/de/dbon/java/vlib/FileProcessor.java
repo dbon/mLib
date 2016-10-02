@@ -52,8 +52,10 @@ public class FileProcessor implements Runnable {
       MediaLibrary.diskCount = 0;
       Configuration.unsupportedExtensions = "";
       // reads media files from hard drive and adds them to scannedMediaFiles
+      Logger.log("scanning files...", Logger.LOG_LEVEL_APP);
       scanFilesOnDisk(new ArrayList<File>(Arrays.asList(searchDir.listFiles())));
       // delta logic
+      Logger.log("importing new files into mLib... ", Logger.LOG_LEVEL_APP);
       importNewFiles(harddriveFiles, Configuration.databaseDir, mLibObjects);
       // check if there are files in library which doesn't exist on file system anymore
       fileIntegrityCheck();
@@ -77,7 +79,6 @@ public class FileProcessor implements Runnable {
   }
 
   private void fileIntegrityCheck() throws SQLException {
-    Logger.log("### File Integrety Check Start", Logger.LOG_LEVEL_MUTE);
     vLibStatus();
 
     Logger.log("mLibCount: " + MediaLibrary.mLibCount, Logger.LOG_LEVEL_MUTE);
@@ -92,7 +93,6 @@ public class FileProcessor implements Runnable {
     } else {
       Logger.log("integrity check successfull - all files up to date.");
     }
-    Logger.log("### File Integrety Check End", Logger.LOG_LEVEL_MUTE);
   }
 
   private void removeOutdatedFilesFromDB(ArrayList<MediaFile> scannedMediaFiles,
@@ -139,7 +139,6 @@ public class FileProcessor implements Runnable {
    */
   public static void importNewFiles(ArrayList<MediaFile> harddriveFiles, String databaseFile,
       ArrayList<MediaFile> mediaLibrary) throws SQLException {
-    Logger.log("### Delta Logic Start (Add or Skip)", Logger.LOG_LEVEL_FILE);
 
     // for each file from harddrive
     for (MediaFile diskFile : harddriveFiles) {
@@ -147,9 +146,9 @@ public class FileProcessor implements Runnable {
       // when file from disk is not yes in db: add it!
       if (!MediaLibrary.mLibHashes.contains(diskFile.getHash())) {
         Logger.log("processing scanned file with hash: " + diskFile.getHash(),
-            Logger.LOG_LEVEL_FILE);
+            Logger.LOG_LEVEL_MUTE);
         DatabaseWorker.getInstance().insertMediaFile(diskFile, databaseFile);
-        Logger.log("file not found in db, adding: " + diskFile.toString(), Logger.LOG_LEVEL_FILE);
+        Logger.log("adding: " + diskFile.toString(), Logger.LOG_LEVEL_FILE);
         MediaLibrary.mLibCount++;
       } else {
         // Logger.log("media File already inserted, skipping.");
@@ -157,11 +156,9 @@ public class FileProcessor implements Runnable {
         skippedMediaFiles.add(diskFile);
       }
     }
-    Logger.log("### Delta Logic END", Logger.LOG_LEVEL_FILE);
   }
 
   private void scanFilesOnDisk(ArrayList<File> files) throws IOException, NoSuchAlgorithmException {
-    Logger.log("### Scanning files on disk START", Logger.LOG_LEVEL_FILE);
     for (File file : files) {
       Logger.log("scanning file " + file.getAbsolutePath(), Logger.LOG_LEVEL_FILE);
 
@@ -169,13 +166,18 @@ public class FileProcessor implements Runnable {
       try {
         folder = ShellFolder.getShellFolder(file);
       } catch (FileNotFoundException e) {
-        Logger.log("file not found: " + file.getAbsolutePath());
+        Logger.log("ERROR: file not found: " + file.getAbsolutePath(), Logger.LOG_LEVEL_FILE);
         continue;
       }
 
       // recursive call to deep fetch all media files
       if (file.isDirectory() && !folder.isLink()) {
-        scanFilesOnDisk(new ArrayList<File>(Arrays.asList(file.listFiles())));
+        if (!Configuration.ignoredFolders.contains("," + folder.getName() + ",")) {
+          scanFilesOnDisk(new ArrayList<File>(Arrays.asList(file.listFiles())));
+        } else {
+          Logger.log("folder " + folder.getName() + " ignored.", Logger.LOG_LEVEL_FILE);
+        }
+
       } else {
         MediaFile mFile = new MediaFile();
 
@@ -219,7 +221,6 @@ public class FileProcessor implements Runnable {
         }
       }
     }
-    Logger.log("### Scanning files on disk END", Logger.LOG_LEVEL_FILE);
   }
 
   public String getAllFiles() {

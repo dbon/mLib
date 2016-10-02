@@ -27,6 +27,9 @@ public class Configuration {
   public static String unsupportedExtensions = "";
   public static String suspiciousFiles = "";
 
+  public static String ignoredFolders =
+      ",.git,.settings,.metadata,.recommenders,wp-admin,wp-content,wp-includes,";
+
   public static String vlcLocation = "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe";
 
   public static HashMap<String, Integer> ratings = new HashMap<String, Integer>();

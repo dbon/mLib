@@ -38,10 +38,13 @@ public class Logger {
         logFile.createNewFile();
       }
 
-      PrintWriter out = new PrintWriter(new FileWriter(logFile, true));
       String output = dateFormat.format(new Date()) + " " + msg;
-      out.println(output);
-      out.close();
+
+      if (logLevel != LOG_LEVEL_MUTE) {
+        PrintWriter out = new PrintWriter(new FileWriter(logFile, true));
+        out.println(output);
+        out.close();
+      }
 
       if (logLevel == LOG_LEVEL_APP) {
         Interface.log.append(output + "\n");

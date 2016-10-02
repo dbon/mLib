@@ -110,8 +110,6 @@ public class DatabaseWorker {
       stmt.executeUpdate();
       stmt.close();
       con.close();
-
-      // Interface.getInstance().reloadFileTable();
     } catch (SQLException e) {
       e.printStackTrace();
     }

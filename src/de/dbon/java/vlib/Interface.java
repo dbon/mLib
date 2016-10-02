@@ -615,7 +615,11 @@ public class Interface implements ActionListener, MouseListener {
         DatabaseWorker.getInstance().openDatabase();
         // DatabaseWorker.getInstance().readLibraryIntoObjects();
         Interface.getInstance().reloadFileTable();
-        Configuration.checkForScanDir();
+
+        // prevents the dialog from being opened when properties file not existed
+        if (!Configuration.fileNotFound) {
+          Configuration.checkForScanDir();
+        }
         break;
       case BUTTON_ACTION_COMMAND_SCANDIR_BROWSE:
 

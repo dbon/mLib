@@ -30,6 +30,7 @@ public class Configuration {
   public static String vlcLocation = "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe";
 
   public static HashMap<String, Integer> ratings = new HashMap<String, Integer>();
+  static boolean fileNotFound;
 
   public static void init() {
     ratings.put("AAA", 1);
@@ -65,6 +66,7 @@ public class Configuration {
     } catch (FileNotFoundException e) {
       Logger.log("configuration file " + Configuration.propertiesFileName
           + " not found: User has to select workspace path");
+      Configuration.fileNotFound = true;
       Interface.getInstance().showSelectWorkspaceDialog();
     } catch (IOException e) {
       e.printStackTrace();

@@ -98,15 +98,15 @@ public class DatabaseWorker {
       String insertQuery =
           "INSERT INTO " + Configuration.databaseTableName + " values (? ,'" + mFile.getExtension()
               + "',? ," + mFile.getFilesize() + ",'" + mFile.getLastviewed() + "',"
-              + mFile.getViewcount() + ",'" + mFile.getTags() + "','" + mFile.getHash() + "','"
-              + mFile.getRating() + "','" + mFile.getReviewed() + "','" + mFile.getToBeDeleted()
-              + "')";
+              + mFile.getViewcount() + ",'" + mFile.getTags() + "',? ," + mFile.getRating() + ","
+              + mFile.getReviewed() + "," + mFile.getToBeDeleted() + ")";
       Connection con;
 
       con = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
       PreparedStatement stmt = con.prepareStatement(insertQuery);
       stmt.setString(1, mFile.getName());
       stmt.setString(2, mFile.getPath());
+      stmt.setString(3, mFile.getHash());
       stmt.executeUpdate();
       stmt.close();
       con.close();

@@ -35,19 +35,18 @@ public class Configuration {
   public static HashMap<String, Integer> ratings = new HashMap<String, Integer>();
   static boolean fileNotFound;
 
-  public static void init() {
-    ratings.put("AAA", 1);
-    ratings.put("AA", 2);
-    ratings.put("A", 3);
-    ratings.put("B", 4);
-    ratings.put("C", 5);
-  }
-
   /**
    * Reads property file and loads its values to class Configuration. If necessary properties are
    * missing a wizard dialog will be opened to select those values.
    */
   public static void initialize() {
+    ratings.put("A", 6);
+    ratings.put("B", 5);
+    ratings.put("C", 4);
+    ratings.put("D", 3);
+    ratings.put("E", 2);
+    ratings.put("F", 1);
+
     Properties prop = new Properties();
     InputStream input = null;
     try {

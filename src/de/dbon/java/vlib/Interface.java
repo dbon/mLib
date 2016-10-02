@@ -65,11 +65,12 @@ public class Interface implements ActionListener, MouseListener {
   public static JTextArea log = new JTextArea(10, 100);
   public static JTable fileTable;
 
-  public static JButton ratingAAAButton;
-  public static JButton ratingAAButton;
   public static JButton ratingAButton;
   public static JButton ratingBButton;
   public static JButton ratingCButton;
+  public static JButton ratingDButton;
+  public static JButton ratingEButton;
+  public static JButton ratingFButton;
 
   public static LinkedHashMap<String, Integer> columnNames = new LinkedHashMap<String, Integer>();
 
@@ -191,97 +192,86 @@ public class Interface implements ActionListener, MouseListener {
     cEast.weightx = 0;
     cEast.gridwidth = 0;
 
-    JPanel optionPanel = new JPanel();
-    // optionPanel.setLayout(new BoxLayout(optionPanel, BoxLayout.Y_AXIS));
+    // JPanel optionPanel = new JPanel();
     JButton syncButton = new JButton("Synchronize");
     syncButton.setActionCommand(BUTTON_ACTION_COMMAND_SYNCHRONIZATION);
     syncButton.addActionListener(this);
     east.add(syncButton, cEast);
-    // optionPanel.add(syncButton);
 
     cEast.gridy = 1;
     JButton refreshTableButton = new JButton("RefreshTable");
     refreshTableButton.setActionCommand(BUTTON_ACTION_COMMAND_REFRESH_TABLE);
     refreshTableButton.addActionListener(this);
     east.add(refreshTableButton, cEast);
-    // optionPanel.add(refreshTableButton);
 
     cEast.gridy = 2;
     JButton openInExplorerTableButton = new JButton("Open in Explorer");
     openInExplorerTableButton.setActionCommand(BUTTON_ACTION_COMMAND_OPEN_IN_EXPLORER);
     openInExplorerTableButton.addActionListener(this);
     east.add(openInExplorerTableButton, cEast);
-    // optionPanel.add(openInExplorerTableButton);
 
     cEast.gridy = 3;
     JButton deleteButton = new JButton("Delete File");
     deleteButton.setActionCommand(BUTTON_ACTION_COMMAND_DELETE_FILE);
     deleteButton.addActionListener(this);
     east.add(deleteButton, cEast);
-    // optionPanel.add(deleteButton);
 
     cEast.gridy = 4;
     east.add(new JLabel("Rating:"), cEast);
 
     cEast.gridy = 5;
-    ratingAAAButton = new JButton("AAA");
-    ratingAAAButton.addActionListener(this);
-    ratingAAAButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
-    east.add(ratingAAAButton, cEast);
-
-    cEast.gridy = 6;
-    ratingAAButton = new JButton("AA");
-    ratingAAButton.addActionListener(this);
-    ratingAAButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
-    east.add(ratingAAButton, cEast);
-
-    cEast.gridy = 7;
     ratingAButton = new JButton("A");
     ratingAButton.addActionListener(this);
     ratingAButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
     east.add(ratingAButton, cEast);
 
-    cEast.gridy = 8;
+    cEast.gridy = 6;
     ratingBButton = new JButton("B");
     ratingBButton.addActionListener(this);
     ratingBButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
     east.add(ratingBButton, cEast);
 
-    cEast.gridy = 9;
+    cEast.gridy = 7;
     ratingCButton = new JButton("C");
     ratingCButton.addActionListener(this);
     ratingCButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
     east.add(ratingCButton, cEast);
 
+    cEast.gridy = 8;
+    ratingDButton = new JButton("D");
+    ratingDButton.addActionListener(this);
+    ratingDButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    east.add(ratingDButton, cEast);
 
-    // optionPanel.add(ratingAAAButton);
-    // optionPanel.add(ratingAAButton);
-    // optionPanel.add(ratingAButton);
-    // optionPanel.add(ratingBButton);
-    // optionPanel.add(ratingCButton);
+    cEast.gridy = 9;
+    ratingEButton = new JButton("E");
+    ratingEButton.addActionListener(this);
+    ratingEButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    east.add(ratingEButton, cEast);
 
     cEast.gridy = 10;
+    ratingFButton = new JButton("F");
+    ratingFButton.addActionListener(this);
+    ratingFButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    east.add(ratingFButton, cEast);
+
+    cEast.gridy = 11;
     JButton toBeDeletedButton = new JButton("Set toBeDeleted");
     toBeDeletedButton.addActionListener(this);
     toBeDeletedButton.setActionCommand(BUTTON_ACTION_COMMAND_SET_TOBEDELETED_);
     east.add(toBeDeletedButton, cEast);
-    // optionPanel.add(toBeDeletedButton);
 
-    cEast.gridy = 11;
+    cEast.gridy = 12;
     JButton setReviewedButton = new JButton("Set reviewed");
     setReviewedButton.addActionListener(this);
     setReviewedButton.setActionCommand(BUTTON_ACTION_COMMAND_SET_REVIEWD);
     east.add(setReviewedButton, cEast);
-    // optionPanel.add(setReviewedButton);
 
-    cEast.gridy = 12;
+    cEast.gridy = 13;
     JButton resetRowButton = new JButton("Reset Row");
     resetRowButton.addActionListener(this);
     resetRowButton.setActionCommand(BUTTON_ACTION_COMMAND_RESET_ROW);
     east.add(resetRowButton, cEast);
-    // optionPanel.add(resetRowButton);
-
-    // east.add(optionPanel, cEast);
 
     // SOUTH
     log.setEditable(false);
@@ -291,8 +281,6 @@ public class Interface implements ActionListener, MouseListener {
     scrollPane.setAutoscrolls(true);
     Rectangle rectangle = new Rectangle();
     scrollPane.scrollRectToVisible(rectangle);
-
-
 
     frame.add(north, BorderLayout.NORTH);
     frame.add(new JScrollPane(fileTable), BorderLayout.CENTER);
@@ -428,7 +416,6 @@ public class Interface implements ActionListener, MouseListener {
     c.ipadx = 300;
     c.fill = GridBagConstraints.BOTH;
     c.insets = new Insets(15, 10, 0, 0);
-    // c.anchor = GridBagConstraints.CENTER;
     workspacePath = new JTextField();
     workspacePath.setText("C:\\Users\\Daniel\\workspace\\mLib");
     panel.add(workspacePath, c);
@@ -440,7 +427,6 @@ public class Interface implements ActionListener, MouseListener {
     c.ipadx = 0;
     c.weightx = 0.1;
     c.fill = GridBagConstraints.VERTICAL;
-    // c.anchor = GridBagConstraints.CENTER;
     JButton browseButton = new JButton("Browse...");
     browseButton.setActionCommand(BUTTON_ACTION_COMMAND_WORKSPACE_BROWSE);
     browseButton.addActionListener(this);
@@ -698,8 +684,6 @@ public class Interface implements ActionListener, MouseListener {
         break;
       case BUTTON_ACTION_COMMAND_RATING:
         try {
-
-          Logger.log("isRowSelected:" + isRowSelected);
           if (isRowSelected) {
             Runtime.getRuntime().exec("taskkill /F /IM vlc.exe");
             Thread.sleep(500);
@@ -713,7 +697,6 @@ public class Interface implements ActionListener, MouseListener {
               rating =
                   (int) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
                       Interface.columnNames.get(COLUMN_NAME_FILERATING));
-              Logger.log("rating:" + rating);
               if (rating == 0) {
                 nextRow = selectedRow + countToNextRow;
               } else {

@@ -57,7 +57,7 @@ public class Interface implements ActionListener, MouseListener {
   public JDialog selectFileExtenstionDialog;
   public JTextField workspacePath;
   public JTextField scandirPath = new JTextField();
-  public JTextField fileExtensionList;
+  public static JTextField fileExtensionList;
   public static JTextField databaseDir;
   public static JTextField scanDir;
   public static A_DefaultTableModel tableModel;
@@ -615,6 +615,7 @@ public class Interface implements ActionListener, MouseListener {
         DatabaseWorker.getInstance().openDatabase();
         // DatabaseWorker.getInstance().readLibraryIntoObjects();
         Interface.getInstance().reloadFileTable();
+        Configuration.checkForScanDir();
         break;
       case BUTTON_ACTION_COMMAND_SCANDIR_BROWSE:
 
@@ -635,7 +636,9 @@ public class Interface implements ActionListener, MouseListener {
         Configuration.setConfigurationProperty(Configuration.propertyKeyScanDir,
             Configuration.scanDir);
 
+
         Interface.getInstance().reloadFileTable();
+        Configuration.checkForAllowedExtensions();
         break;
       case BUTTON_ACTION_COMMAND_SCANDIR_CHANGE:
         showSelectScanDirDialog();
@@ -644,7 +647,7 @@ public class Interface implements ActionListener, MouseListener {
         if (DatabaseWorker.getInstance().openDatabase()) {
           Thread thread = null;
           try {
-            Logger.log("### SYNCHRONIZATION");
+            Logger.log("Synchronization...");
             thread = new Thread(new FileProcessor(Configuration.scanDir));
           } catch (NoSuchAlgorithmException | IOException | SQLException e1) {
             e1.printStackTrace();
@@ -851,14 +854,17 @@ public class Interface implements ActionListener, MouseListener {
   }
 
   public void reloadFileTable() {
-
+    Logger.log("reloading file table", Logger.LOG_LEVEL_APP);
+    // remove all rows from table model
     for (int i = tableModel.getRowCount() - 1; i >= 0; i--) {
       tableModel.removeRow(i);
     }
-    DatabaseWorker.getInstance().readLibraryIntoObjects();
+
+    // scan mLib (sqlite) and save into mLibObjects
+    DatabaseWorker.getInstance().readMLibIntoObjects();
 
     int count = 1;
-    for (MediaFile v : FileProcessor.sqliteFiles) {
+    for (MediaFile v : FileProcessor.mLibObjects) {
       Object[] tableColumns =
           {count, v.getRating(), v.getReviewed(), v.getToBeDeleted(), v.getName(),
               v.getExtension(), v.getFilesize(), v.getPath()};

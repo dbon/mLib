@@ -1,6 +1,5 @@
 package de.dbon.java.vlib;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -43,8 +42,8 @@ public class DatabaseWorker {
     Connection con = null;
     try {
       Class.forName("org.sqlite.JDBC");
-      Logger.log("creating database " + Configuration.databaseDir);
-      File dbFile = new File(Configuration.databaseDir);
+      // Logger.log("creating database " + Configuration.databaseDir);
+      // File dbFile = new File(Configuration.databaseDir);
       Logger.log("open database " + Configuration.databaseDir);
       con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
     } catch (Exception ex) {
@@ -128,7 +127,6 @@ public class DatabaseWorker {
       stmt.executeUpdate();
       stmt.close();
       con.close();
-      Interface.getInstance().reloadFileTable();
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -149,10 +147,11 @@ public class DatabaseWorker {
     }
   }
 
-  public void readLibraryIntoObjects() {
+  public void readMLibIntoObjects() {
+    Logger.log("reading mlib from sqlite", Logger.LOG_LEVEL_MUTE);
     MediaLibrary.mLibCount = 0;
     try {
-      FileProcessor.sqliteFiles = new ArrayList<MediaFile>();
+      FileProcessor.mLibObjects = new ArrayList<MediaFile>();
       Connection con;
       con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
       Statement stmt = con.createStatement();
@@ -171,12 +170,20 @@ public class DatabaseWorker {
         vid.setRating(rs.getInt("rating"));
         vid.setReviewed(rs.getInt("reviewed"));
 
-        MediaLibrary.mLibHashes =
-            MediaLibrary.mLibHashes
-                + MediaLibrary.generateFileHash(rs.getString("name"), rs.getString("extension"),
-                    rs.getString("filesize")) + ",";
+        String newFileHash =
+            MediaLibrary.generateFileHash(rs.getString("name"), rs.getString("extension"),
+                rs.getString("filesize"));
 
-        FileProcessor.sqliteFiles.add(vid);
+        if (!MediaLibrary.mLibHashes.contains(newFileHash)) {
+          MediaLibrary.mLibHashes = MediaLibrary.mLibHashes + newFileHash + ",";
+          Logger.log("added new file hash " + newFileHash + " to mLibHases", Logger.LOG_LEVEL_MUTE);
+        } else {
+          Logger.log("new file hash (" + newFileHash + ") already in mLibHashes ("
+              + MediaLibrary.mLibHashes + ") ... skipping.", Logger.LOG_LEVEL_MUTE);
+        }
+        Logger.log("mLibHases:" + MediaLibrary.mLibHashes, Logger.LOG_LEVEL_MUTE);
+
+        FileProcessor.mLibObjects.add(vid);
         MediaLibrary.mLibCount++;
       }
       rs.close();

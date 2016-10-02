@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 public class MediaLibrary {
 
-  public static String mLibHashes = "";
+  public static String mLibHashes = ",";
   public static String diskHashes = "";
   public static long mLibCount = 0;
   public static long diskCount = 0;

@@ -57,22 +57,11 @@ public class Configuration {
       if (Configuration.databaseDir != null && !"".equals(Configuration.databaseDir)) {
         Interface.databaseDir.setText(Configuration.databaseDir);
         Interface.getInstance().reloadFileTable();
+        checkForScanDir();
       } else {
         Interface.getInstance().showSelectWorkspaceDialog();
       }
 
-      if (Configuration.scanDir != null && !"".equals(Configuration.scanDir)) {
-        Interface.scanDir.setText(Configuration.scanDir);
-      } else {
-        Interface.getInstance().showSelectScanDirDialog();
-      }
-
-      if (Configuration.allowedExtensions == null || "".equals(Configuration.allowedExtensions)) {
-        allowedExtensions = "mp4,mkv,mov,mpg,wmv,flv,avi";
-        Interface.getInstance().showFileExtensionDialog();
-      }
-
-      Configuration.init();
     } catch (FileNotFoundException e) {
       Logger.log("configuration file " + Configuration.propertiesFileName
           + " not found: User has to select workspace path");
@@ -89,6 +78,26 @@ public class Configuration {
       }
     }
   }
+
+  public static void checkForScanDir() {
+    if (Configuration.scanDir != null && !"".equals(Configuration.scanDir)) {
+      Interface.scanDir.setText(Configuration.scanDir);
+      checkForAllowedExtensions();
+    } else {
+      Interface.getInstance().showSelectScanDirDialog();
+    }
+  }
+
+  public static void checkForAllowedExtensions() {
+    Logger.log("selected extensions=" + Configuration.allowedExtensions);
+    if (Configuration.allowedExtensions != null && !"".equals(Configuration.allowedExtensions)) {
+      // Interface.fileExtensionList.setText(Configuration.allowedExtensions);
+    } else {
+      allowedExtensions = "mp4,mkv,mov,mpg,wmv,flv,avi";
+      Interface.getInstance().showFileExtensionDialog();
+    }
+  }
+
 
   public static void setConfigurationProperty(String key, String value) {
     Properties prop = new Properties();

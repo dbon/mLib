@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -21,8 +22,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -90,6 +94,7 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
   public static final String COLUMN_NAME_FILERATING = "Rating";
   public static final String COLUMN_NAME_REVIEWED = "Reviewed";
   public static final String COLUMN_NAME_TOBEDELTED = "to be deleted";
+  public static final String COLUMN_NAME_FILERATINGINT = "RatingINT";
 
   public static final String BUTTON_ACTION_COMMAND_MENUITEM = "menuitem";
   public static final String MENU_ITEM_QUIT = "Beenden";
@@ -107,7 +112,13 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
   public static final String BUTTON_ACTION_COMMAND_DELETE_FILE = "delete file";
   public static final String BUTTON_ACTION_COMMAND_OPEN_IN_EXPLORER = "open in explorer";
 
-  public static final String BUTTON_ACTION_COMMAND_RATING = "rating";
+  public static final String BUTTON_ACTION_COMMAND_RATING_A = "ratingA";
+  public static final String BUTTON_ACTION_COMMAND_RATING_B = "ratingB";
+  public static final String BUTTON_ACTION_COMMAND_RATING_C = "ratingC";
+  public static final String BUTTON_ACTION_COMMAND_RATING_D = "ratingD";
+  public static final String BUTTON_ACTION_COMMAND_RATING_E = "ratingE";
+  public static final String BUTTON_ACTION_COMMAND_RATING_F = "ratingF";
+
   public static final String BUTTON_ACTION_COMMAND_SET_TOBEDELETED_ = "set to be delted";
   public static final String BUTTON_ACTION_COMMAND_SET_REVIEWD = "set reviewed";
   private static final String BUTTON_ACTION_COMMAND_RESET_ROW = "reset row";
@@ -120,6 +131,9 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
   JMenu menu, submenu;
   JMenuItem menuItem;
 
+  public static ArrayList<String> iconNames = new ArrayList<String>();
+  HashMap<Integer, ImageIcon> icons = new HashMap<Integer, ImageIcon>();
+
   private Interface() {
     // prevents this class from being instantiated
   }
@@ -131,8 +145,9 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     return instance;
   }
 
-  public JFrame run() {
+  public JFrame run() throws IOException {
     initTableColumnNames();
+    loadAndScaleImages();
     frame = new JFrame();
     // frame.setSize(1650, 800);
     frame.setTitle(appTitle + " " + appVersion);
@@ -195,8 +210,13 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     north.add(searchBarPanel, cNorth);
 
     // CENTER
+    // create table model with columns and 0 rows
     tableModel = new A_DefaultTableModel(columnNames.keySet().toArray(), 0);
     fileTable = new JTable(tableModel);
+    // remove rating int column
+    fileTable.removeColumn(fileTable.getColumnModel().getColumn(
+        columnNames.get(COLUMN_NAME_FILERATINGINT)));
+
     fileTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
     fileTable.setFillsViewportHeight(true);
     fileTable.setAutoCreateRowSorter(true);
@@ -246,39 +266,45 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     east.add(new JLabel("Rating:"), cEast);
 
     cEast.gridy = 5;
-    ratingAButton = new JButton("A");
+    ratingAButton = new JButton();
     ratingAButton.addActionListener(this);
-    ratingAButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    ratingAButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING_A);
+    ratingAButton.setIcon(icons.get(6));
     east.add(ratingAButton, cEast);
 
     cEast.gridy = 6;
-    ratingBButton = new JButton("B");
+    ratingBButton = new JButton();
     ratingBButton.addActionListener(this);
-    ratingBButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    ratingBButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING_B);
+    ratingBButton.setIcon(icons.get(5));
     east.add(ratingBButton, cEast);
 
     cEast.gridy = 7;
-    ratingCButton = new JButton("C");
+    ratingCButton = new JButton();
     ratingCButton.addActionListener(this);
-    ratingCButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    ratingCButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING_C);
+    ratingCButton.setIcon(icons.get(4));
     east.add(ratingCButton, cEast);
 
     cEast.gridy = 8;
-    ratingDButton = new JButton("D");
+    ratingDButton = new JButton();
     ratingDButton.addActionListener(this);
-    ratingDButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    ratingDButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING_D);
+    ratingDButton.setIcon(icons.get(3));
     east.add(ratingDButton, cEast);
 
     cEast.gridy = 9;
-    ratingEButton = new JButton("E");
+    ratingEButton = new JButton();
     ratingEButton.addActionListener(this);
-    ratingEButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    ratingEButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING_E);
+    ratingEButton.setIcon(icons.get(2));
     east.add(ratingEButton, cEast);
 
     cEast.gridy = 10;
-    ratingFButton = new JButton("F");
+    ratingFButton = new JButton();
     ratingFButton.addActionListener(this);
-    ratingFButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING);
+    ratingFButton.setActionCommand(BUTTON_ACTION_COMMAND_RATING_F);
+    ratingFButton.setIcon(icons.get(1));
     east.add(ratingFButton, cEast);
 
     cEast.gridy = 11;
@@ -314,8 +340,12 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     frame.add(scrollPane, BorderLayout.SOUTH);
     frame.setVisible(true);
     frame.pack();
+
+
     return frame;
   }
+
+
 
   private void setColumnsHeaderAlignLeft() {
     DefaultTableCellRenderer renderer =
@@ -361,8 +391,6 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
         .setCellRenderer(leftRenderer);
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_FILEPATH))
         .setCellRenderer(leftRenderer);
-    fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_FILERATING))
-        .setCellRenderer(leftRenderer);
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_REVIEWED))
         .setCellRenderer(leftRenderer);
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_TOBEDELTED))
@@ -371,7 +399,7 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
 
 
   private void setColumnSizes() {
-    fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_NUMBER)).setPreferredWidth(50);
+    fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_NUMBER)).setPreferredWidth(35);
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_FILENAME))
         .setPreferredWidth(400);
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_FILEEXTENSION))
@@ -381,7 +409,7 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_FILEPATH))
         .setPreferredWidth(800);
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_FILERATING))
-        .setPreferredWidth(50);
+        .setPreferredWidth(60);
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_REVIEWED))
         .setPreferredWidth(50);
     fileTable.getColumnModel().getColumn(columnNames.get(COLUMN_NAME_TOBEDELTED))
@@ -397,6 +425,7 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     columnNames.put(Interface.COLUMN_NAME_FILEEXTENSION, 5);
     columnNames.put(Interface.COLUMN_NAME_FILESIZE, 6);
     columnNames.put(Interface.COLUMN_NAME_FILEPATH, 7);
+    columnNames.put(Interface.COLUMN_NAME_FILERATINGINT, 8);
   }
 
   public void showSelectWorkspaceDialog() {
@@ -708,52 +737,71 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
           e1.printStackTrace();
         }
         break;
-      case BUTTON_ACTION_COMMAND_RATING:
+      case BUTTON_ACTION_COMMAND_RATING_A:
         try {
           if (isRowSelected) {
-
-            int ratingNumber = Configuration.ratings.get(((JButton) event.getSource()).getText());
-            int nextRow = 0;
-
-            int rating = 0;
-            int countToNextRow = 1;
-            String nextFilePath = "";
-            do {
-              rating =
-                  (int) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
-                      Interface.columnNames.get(COLUMN_NAME_FILERATING));
-
-              nextFilePath =
-                  (String) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
-                      Interface.columnNames.get(COLUMN_NAME_FILEPATH));
-
-              if (rating == 0) {
-                nextRow = selectedRow + countToNextRow;
-              } else {
-                nextRow = selectedRow;
-              }
-              countToNextRow++;
-            } while (rating != 0);
-
-            Logger.log("nextRow=" + nextRow);
-
-            DatabaseWorker.getInstance().updateMediaFile(
-                MediaLibrary.generateFileHash(fileName, fileExtension, fileSize),
-                DatabaseWorker.updateFieldRating, ratingNumber);
-
-            DatabaseWorker.getInstance().updateMediaFile(
-                MediaLibrary.generateFileHash(fileName, fileExtension, fileSize),
-                DatabaseWorker.updateFieldReviewed, 1);
-
-            reloadFileTable();
-            fileTable.setRowSelectionInterval(nextRow, nextRow);
-
-            Runtime.getRuntime().exec("taskkill /F /IM vlc.exe");
-            Thread.sleep(500);
-
-            Logger.log("opening file " + nextFilePath);
-            ProcessBuilder pb = new ProcessBuilder(Configuration.vlcLocation, nextFilePath);
-            pb.start();
+            int ratingNumber = Configuration.ratings.get("A");
+            rateFile(fileName, fileExtension, fileSize, selectedRow, ratingNumber);
+          }
+        } catch (IOException e1) {
+          e1.printStackTrace();
+        } catch (InterruptedException e1) {
+          e1.printStackTrace();
+        }
+        break;
+      case BUTTON_ACTION_COMMAND_RATING_B:
+        try {
+          if (isRowSelected) {
+            int ratingNumber = Configuration.ratings.get("B");
+            rateFile(fileName, fileExtension, fileSize, selectedRow, ratingNumber);
+          }
+        } catch (IOException e1) {
+          e1.printStackTrace();
+        } catch (InterruptedException e1) {
+          e1.printStackTrace();
+        }
+        break;
+      case BUTTON_ACTION_COMMAND_RATING_C:
+        try {
+          if (isRowSelected) {
+            int ratingNumber = Configuration.ratings.get("C");
+            rateFile(fileName, fileExtension, fileSize, selectedRow, ratingNumber);
+          }
+        } catch (IOException e1) {
+          e1.printStackTrace();
+        } catch (InterruptedException e1) {
+          e1.printStackTrace();
+        }
+        break;
+      case BUTTON_ACTION_COMMAND_RATING_D:
+        try {
+          if (isRowSelected) {
+            int ratingNumber = Configuration.ratings.get("D");
+            rateFile(fileName, fileExtension, fileSize, selectedRow, ratingNumber);
+          }
+        } catch (IOException e1) {
+          e1.printStackTrace();
+        } catch (InterruptedException e1) {
+          e1.printStackTrace();
+        }
+        break;
+      case BUTTON_ACTION_COMMAND_RATING_E:
+        try {
+          if (isRowSelected) {
+            int ratingNumber = Configuration.ratings.get("E");
+            rateFile(fileName, fileExtension, fileSize, selectedRow, ratingNumber);
+          }
+        } catch (IOException e1) {
+          e1.printStackTrace();
+        } catch (InterruptedException e1) {
+          e1.printStackTrace();
+        }
+        break;
+      case BUTTON_ACTION_COMMAND_RATING_F:
+        try {
+          if (isRowSelected) {
+            int ratingNumber = Configuration.ratings.get("F");
+            rateFile(fileName, fileExtension, fileSize, selectedRow, ratingNumber);
           }
         } catch (IOException e1) {
           e1.printStackTrace();
@@ -822,8 +870,52 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     }
   }
 
+  private void rateFile(String fileName, String fileExtension, String fileSize, int selectedRow,
+      int ratingNumber) throws IOException, InterruptedException {
+    int nextRow = 0;
+    int rating = 0;
+    int countToNextRow = 1;
+    String nextFilePath = "";
+    do {
+      rating =
+          (int) fileTable.getModel().getValueAt(fileTable.getSelectedRow() + countToNextRow,
+              Interface.columnNames.get(COLUMN_NAME_FILERATINGINT));
+
+      nextFilePath =
+          (String) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
+              Interface.columnNames.get(COLUMN_NAME_FILEPATH));
+
+      if (rating == 0) {
+        nextRow = selectedRow + countToNextRow;
+      } else {
+        nextRow = selectedRow;
+      }
+      countToNextRow++;
+    } while (rating != 0);
+
+    Logger.log("nextRow=" + nextRow);
+
+    DatabaseWorker.getInstance().updateMediaFile(
+        MediaLibrary.generateFileHash(fileName, fileExtension, fileSize),
+        DatabaseWorker.updateFieldRating, ratingNumber);
+
+    DatabaseWorker.getInstance().updateMediaFile(
+        MediaLibrary.generateFileHash(fileName, fileExtension, fileSize),
+        DatabaseWorker.updateFieldReviewed, 1);
+
+    reloadFileTable();
+    fileTable.setRowSelectionInterval(nextRow, nextRow);
+
+    Runtime.getRuntime().exec("taskkill /F /IM vlc.exe");
+    Thread.sleep(500);
+
+    Logger.log("opening file " + nextFilePath);
+    ProcessBuilder pb = new ProcessBuilder(Configuration.vlcLocation, nextFilePath);
+    pb.start();
+  }
+
   private int getNumberOfSelectedRow() {
-    return (int) fileTable.getValueAt(fileTable.getSelectedRow(),
+    return (int) fileTable.getModel().getValueAt(fileTable.getSelectedRow(),
         columnNames.get(Interface.COLUMN_NAME_NUMBER));
   }
 
@@ -853,8 +945,8 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
   }
 
   private int getRatingOfSelectedRow() {
-    return (int) fileTable.getValueAt(fileTable.getSelectedRow(),
-        columnNames.get(Interface.COLUMN_NAME_FILERATING));
+    return (int) fileTable.getModel().getValueAt(fileTable.getSelectedRow(),
+        columnNames.get(Interface.COLUMN_NAME_FILERATINGINT));
   }
 
   private int getReviewedOfSelectedRow() {
@@ -874,6 +966,27 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     Interface.log.setCaretPosition(Interface.log.getDocument().getLength());
   }
 
+  private void loadAndScaleImages() {
+    iconNames.add("images/0-rating.png");
+    iconNames.add("images/1-rating.png");
+    iconNames.add("images/2-rating.png");
+    iconNames.add("images/3-rating.png");
+    iconNames.add("images/4-rating.png");
+    iconNames.add("images/5-rating.png");
+    System.out.println("iconNamesize=" + iconNames.size());
+
+    for (int i = 5; i >= 0; i--) {
+      icons.put(i + 1, scaleIcon(iconNames.get(i)));
+    }
+  }
+
+  private ImageIcon scaleIcon(String iconName) {
+    ImageIcon ii = new ImageIcon(iconName);
+    Image img = ii.getImage();
+    Image scaledIcon = img.getScaledInstance(50, 10, java.awt.Image.SCALE_SMOOTH);
+    return new ImageIcon(scaledIcon);
+  }
+
   public void reloadFileTable() {
     Logger.log("reloading file table", Logger.LOG_LEVEL_APP);
     // remove all rows from table model
@@ -884,12 +997,16 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     // scan mLib (sqlite) and save into mLibObjects
     DatabaseWorker.getInstance().readMLibIntoObjects();
 
-    int count = 1;
+    int count = 0;
     for (MediaFile v : FileProcessor.mLibObjects) {
+
       Object[] tableColumns =
-          {count, v.getRating(), v.getReviewed(), v.getToBeDeleted(), v.getName(),
-              v.getExtension(), v.getFilesize(), v.getPath()};
+          {count, icons.get(v.getRating()), v.getReviewed(), v.getToBeDeleted(), v.getName(),
+              v.getExtension(), v.getFilesize(), v.getPath(), v.getRating()};
       tableModel.addRow(tableColumns);
+
+
+
       count++;
     }
     filterCount.setText("Rows: " + fileTable.getRowCount());
@@ -1024,6 +1141,9 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
         fileExtensionList.requestFocusInWindow();
       }
     });
+
+
+
   }
 
   @Override

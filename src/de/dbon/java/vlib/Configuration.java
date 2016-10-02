@@ -33,6 +33,7 @@ public class Configuration {
   public static String vlcLocation = "C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe";
 
   public static HashMap<String, Integer> ratings = new HashMap<String, Integer>();
+
   static boolean fileNotFound;
 
   /**

@@ -3,9 +3,9 @@ package de.dbon.java.vlib;
 import javax.swing.ImageIcon;
 import javax.swing.table.DefaultTableModel;
 
-public class A_DefaultTableModel extends DefaultTableModel {
+public class MLibTableModel extends DefaultTableModel {
 
-  public A_DefaultTableModel(Object[] columnNames, int rowCount) {
+  public MLibTableModel(Object[] columnNames, int rowCount) {
     super(columnNames, rowCount);
   }
 

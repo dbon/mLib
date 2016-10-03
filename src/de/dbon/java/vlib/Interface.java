@@ -70,7 +70,7 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
   public static JTextField fileExtensionList;
   public static JTextField databaseDir;
   public static JTextField scanDir;
-  public static A_DefaultTableModel tableModel;
+  public static MLibTableModel tableModel;
   public static JTextField searchBar;
   public static JLabel filterCount;
 
@@ -211,7 +211,7 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
 
     // CENTER
     // create table model with columns and 0 rows
-    tableModel = new A_DefaultTableModel(columnNames.keySet().toArray(), 0);
+    tableModel = new MLibTableModel(columnNames.keySet().toArray(), 0);
     fileTable = new JTable(tableModel);
     // remove rating int column
     fileTable.removeColumn(fileTable.getColumnModel().getColumn(

@@ -41,6 +41,7 @@ public class Configuration {
    * missing a wizard dialog will be opened to select those values.
    */
   public static void initialize() {
+
     ratings.put("A", 6);
     ratings.put("B", 5);
     ratings.put("C", 4);

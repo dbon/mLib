@@ -23,6 +23,8 @@ public class DatabaseWorker {
   public static String updateFieldToBeDeleted = "toBeDeleted";
   public static String updateFieldReviewed = "reviewed";
 
+  public static Connection con = null;
+
   private DatabaseWorker() {
     // prevents this class from beeing instantiated
   }
@@ -30,6 +32,12 @@ public class DatabaseWorker {
   public static DatabaseWorker getInstance() {
     if (instance == null) {
       instance = new DatabaseWorker();
+    }
+
+    try {
+      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
+    } catch (SQLException e1) {
+      e1.printStackTrace();
     }
     return instance;
   }
@@ -39,13 +47,13 @@ public class DatabaseWorker {
    * 
    */
   public boolean openDatabase() {
-    Connection con = null;
+
     try {
       Class.forName("org.sqlite.JDBC");
       // Logger.log("creating database " + Configuration.databaseDir);
       // File dbFile = new File(Configuration.databaseDir);
       Logger.log("open database " + Configuration.databaseDir);
-      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
+
     } catch (Exception ex) {
       Logger.log(ex.getClass().getName() + ": " + ex.getMessage());
       ex.printStackTrace();
@@ -93,23 +101,35 @@ public class DatabaseWorker {
     }
   }
 
-  public void insertMediaFile(MediaFile mFile, String databaseFile) {
+  public PreparedStatement getPreparedStatment(String query) {
     try {
-      String insertQuery =
-          "INSERT INTO " + Configuration.databaseTableName + " values (? ,'" + mFile.getExtension()
-              + "',? ," + mFile.getFilesize() + ",'" + mFile.getLastviewed() + "',"
-              + mFile.getViewcount() + ",'" + mFile.getTags() + "',? ," + mFile.getRating() + ","
-              + mFile.getReviewed() + "," + mFile.getToBeDeleted() + ")";
-      Connection con;
+      return con.prepareStatement(query);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
 
-      con = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
-      PreparedStatement stmt = con.prepareStatement(insertQuery);
+  public void insertMediaFile(MediaFile mFile, PreparedStatement stmt) {
+    String insertQuery =
+        "INSERT INTO " + Configuration.databaseTableName + " values (? ,'" + mFile.getExtension()
+            + "',? ," + mFile.getFilesize() + ",'" + mFile.getLastviewed() + "',"
+            + mFile.getViewcount() + ",'" + mFile.getTags() + "',? ," + mFile.getRating() + ","
+            + mFile.getReviewed() + "," + mFile.getToBeDeleted() + ")";
+
+    try {
       stmt.setString(1, mFile.getName());
-      stmt.setString(2, mFile.getPath());
-      stmt.setString(3, mFile.getHash());
+      stmt.setString(2, mFile.getExtension());
+      stmt.setString(3, mFile.getPath());
+      stmt.setLong(4, mFile.getFilesize());
+      stmt.setString(5, mFile.getLastviewed());
+      stmt.setInt(6, mFile.getViewcount());
+      stmt.setString(7, mFile.getTags());
+      stmt.setString(8, mFile.getHash());
+      stmt.setInt(9, mFile.getRating());
+      stmt.setInt(10, mFile.getReviewed());
+      stmt.setInt(11, mFile.getToBeDeleted());
       stmt.executeUpdate();
-      stmt.close();
-      con.close();
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -118,8 +138,6 @@ public class DatabaseWorker {
   public void deleteMediaFile(String fileHash) {
     try {
       String insertQuery = "DELETE FROM " + Configuration.databaseTableName + " WHERE hash=? ";
-      Connection con;
-      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
       PreparedStatement stmt = con.prepareStatement(insertQuery);
       stmt.setString(1, fileHash);
       stmt.executeUpdate();
@@ -134,8 +152,6 @@ public class DatabaseWorker {
     try {
       String dropTableQuery = "DROP TABLE " + Configuration.databaseTableName;
       Logger.log("sql:" + dropTableQuery);
-      Connection con;
-      con = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
       PreparedStatement stmt = con.prepareStatement(dropTableQuery);
       stmt.executeUpdate();
       stmt.close();
@@ -150,8 +166,6 @@ public class DatabaseWorker {
     MediaLibrary.mLibCount = 0;
     try {
       FileProcessor.mLibObjects = new ArrayList<MediaFile>();
-      Connection con;
-      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
       Statement stmt = con.createStatement();
       ResultSet rs = stmt.executeQuery("SELECT * FROM " + Configuration.databaseTableName);
       while (rs.next()) {
@@ -197,9 +211,6 @@ public class DatabaseWorker {
       String insertQuery =
           "UPDATE " + Configuration.databaseTableName + " SET " + updateFieldName + "='" + newValue
               + "' WHERE hash=? ";
-      Connection con;
-
-      con = DriverManager.getConnection("jdbc:sqlite:" + Configuration.databaseDir);
 
       PreparedStatement stmt = con.prepareStatement(insertQuery);
       stmt.setString(1, hash);

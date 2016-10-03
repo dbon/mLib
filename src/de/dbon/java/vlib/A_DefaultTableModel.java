@@ -7,7 +7,6 @@ public class A_DefaultTableModel extends DefaultTableModel {
 
   public A_DefaultTableModel(Object[] columnNames, int rowCount) {
     super(columnNames, rowCount);
-    System.out.println("A_DefaultTableModel()");
   }
 
   @Override
@@ -26,7 +25,6 @@ public class A_DefaultTableModel extends DefaultTableModel {
       return String.class;
     }
   }
-
 
   @Override
   public boolean isCellEditable(int row, int column) {

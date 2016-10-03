@@ -613,7 +613,6 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
       fileRating = getRatingOfSelectedRow();
       fileReviewd = getReviewedOfSelectedRow();
       fileToBeDeleted = getToBeDeletedOfSelectedRow();
-
       selectedRow = fileTable.getSelectedRow();
     }
 
@@ -872,28 +871,6 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
 
   private void rateFile(String fileName, String fileExtension, String fileSize, int selectedRow,
       int ratingNumber) throws IOException, InterruptedException {
-    int nextRow = 0;
-    int rating = 0;
-    int countToNextRow = 1;
-    String nextFilePath = "";
-    do {
-      rating =
-          (int) fileTable.getModel().getValueAt(fileTable.getSelectedRow() + countToNextRow,
-              Interface.columnNames.get(COLUMN_NAME_FILERATINGINT));
-
-      nextFilePath =
-          (String) fileTable.getValueAt(fileTable.getSelectedRow() + countToNextRow,
-              Interface.columnNames.get(COLUMN_NAME_FILEPATH));
-
-      if (rating == 0) {
-        nextRow = selectedRow + countToNextRow;
-      } else {
-        nextRow = selectedRow;
-      }
-      countToNextRow++;
-    } while (rating != 0);
-
-    Logger.log("nextRow=" + nextRow);
 
     DatabaseWorker.getInstance().updateMediaFile(
         MediaLibrary.generateFileHash(fileName, fileExtension, fileSize),
@@ -903,19 +880,64 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
         MediaLibrary.generateFileHash(fileName, fileExtension, fileSize),
         DatabaseWorker.updateFieldReviewed, 1);
 
-    reloadFileTable();
-    fileTable.setRowSelectionInterval(nextRow, nextRow);
+    Interface.getInstance().reloadFileTable();
 
     Runtime.getRuntime().exec("taskkill /F /IM vlc.exe");
     Thread.sleep(500);
 
-    Logger.log("opening file " + nextFilePath);
-    ProcessBuilder pb = new ProcessBuilder(Configuration.vlcLocation, nextFilePath);
-    pb.start();
+    int nextRowNumber = selectNextUnratedRow(selectedRow);
+
+    if (nextRowNumber != -1) {
+      String nextFilePath =
+          (String) fileTable.getValueAt(nextRowNumber,
+              Interface.columnNames.get(COLUMN_NAME_FILEPATH));
+
+      Logger.log("opening file " + nextFilePath);
+      ProcessBuilder pb = new ProcessBuilder(Configuration.vlcLocation, nextFilePath);
+      pb.start();
+    }
+  }
+
+  private boolean isNextUnratedRowSelectable(int nextRowNumber) {
+    boolean isNextRowSelectable = true;
+    try {
+      fileTable.setRowSelectionInterval(nextRowNumber, nextRowNumber);
+    } catch (IllegalArgumentException e) {
+      // thrown when table has no row with nextRowNumber
+      isNextRowSelectable = false;
+    }
+    return isNextRowSelectable;
+  }
+
+  private int selectNextUnratedRow(int selectedRow) {
+    int nextRowNumber = 0;
+    int nextRowRating = 0;
+    int countToNextRow = 1;
+
+    do {
+      // if next row is selectable
+      if (isNextUnratedRowSelectable(selectedRow + countToNextRow)) {
+        nextRowRating =
+            (int) fileTable.getModel().getValueAt(selectedRow + countToNextRow,
+                Interface.columnNames.get(COLUMN_NAME_FILERATINGINT));
+      } else {
+        return -1;
+      }
+
+      if (nextRowRating == 0) {
+        nextRowNumber = selectedRow + countToNextRow;
+      } else {
+        nextRowNumber = selectedRow;
+      }
+      countToNextRow++;
+
+    } while (nextRowRating != 0);
+
+    return nextRowNumber;
   }
 
   private int getNumberOfSelectedRow() {
-    return (int) fileTable.getModel().getValueAt(fileTable.getSelectedRow(),
+    return (int) fileTable.getValueAt(fileTable.getSelectedRow(),
         columnNames.get(Interface.COLUMN_NAME_NUMBER));
   }
 
@@ -973,7 +995,6 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     iconNames.add("images/3-rating.png");
     iconNames.add("images/4-rating.png");
     iconNames.add("images/5-rating.png");
-    System.out.println("iconNamesize=" + iconNames.size());
 
     for (int i = 5; i >= 0; i--) {
       icons.put(i + 1, scaleIcon(iconNames.get(i)));

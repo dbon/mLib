@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.security.NoSuchAlgorithmException;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class FileProcessor implements Runnable {
       scanFilesOnDisk(new ArrayList<File>(Arrays.asList(searchDir.listFiles())));
       // delta logic
       Logger.log("importing new files into mLib... ", Logger.LOG_LEVEL_APP);
-      importNewFiles(harddriveFiles, Configuration.databaseDir, mLibObjects);
+      importNewFiles(harddriveFiles, mLibObjects);
       // check if there are files in library which doesn't exist on file system anymore
       fileIntegrityCheck();
       Interface.getInstance().reloadFileTable();
@@ -137,8 +138,12 @@ public class FileProcessor implements Runnable {
    * @param mediaLibrary files which were already stored in database
    * @throws SQLException
    */
-  public static void importNewFiles(ArrayList<MediaFile> harddriveFiles, String databaseFile,
+  public static void importNewFiles(ArrayList<MediaFile> harddriveFiles,
       ArrayList<MediaFile> mediaLibrary) throws SQLException {
+
+    String query =
+        "INSERT INTO " + Configuration.databaseTableName + " values (?,?,?,?,?,?,?,?,?,?,?)";
+    PreparedStatement stmt = DatabaseWorker.getInstance().getPreparedStatment(query);
 
     // for each file from harddrive
     for (MediaFile diskFile : harddriveFiles) {
@@ -147,7 +152,7 @@ public class FileProcessor implements Runnable {
       if (!MediaLibrary.mLibHashes.contains(diskFile.getHash())) {
         Logger.log("processing scanned file with hash: " + diskFile.getHash(),
             Logger.LOG_LEVEL_MUTE);
-        DatabaseWorker.getInstance().insertMediaFile(diskFile, databaseFile);
+        DatabaseWorker.getInstance().insertMediaFile(diskFile, stmt);
         Logger.log("adding: " + diskFile.toString(), Logger.LOG_LEVEL_FILE);
         MediaLibrary.mLibCount++;
       } else {
@@ -156,6 +161,9 @@ public class FileProcessor implements Runnable {
         skippedMediaFiles.add(diskFile);
       }
     }
+
+    stmt.close();
+    DatabaseWorker.getInstance().con.close();
   }
 
   private void scanFilesOnDisk(ArrayList<File> files) throws IOException, NoSuchAlgorithmException {

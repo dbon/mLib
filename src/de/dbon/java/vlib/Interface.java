@@ -65,6 +65,7 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
   public JDialog selectDatabaseDialog;
   public JDialog selectScanDirDialog;
   public JDialog selectFileExtenstionDialog;
+  public JDialog selectMaintainScanDirDialog;
   public JTextField workspacePath;
   public JTextField scandirPath = new JTextField();
   public static JTextField fileExtensionList;
@@ -99,13 +100,15 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
   public static final String BUTTON_ACTION_COMMAND_MENUITEM = "menuitem";
   public static final String MENU_ITEM_QUIT = "Beenden";
   public static final String MENU_ITEM_FILE_EXTENSION = "Dateiendungen anpassen";
+  public static final String MENU_ITEM_SCAN_DIRECTORIES = "Scan Directories";
 
   public static final String BUTTON_ACTION_COMMAND_WORKSPACE_BROWSE = "browse workspace";
   public static final String BUTTON_ACTION_COMMAND_WORKSPACE_OK = "save workspace";
 
   public static final String BUTTON_ACTION_COMMAND_SCANDIR_BROWSE = "browse scan dir";
   public static final String BUTTON_ACTION_COMMAND_SCANDIR_OK = "save scan dir";
-  public static final String BUTTON_ACTION_COMMAND_SCANDIR_CHANGE = "change scan dir";
+//  public static final String BUTTON_ACTION_COMMAND_SCANDIR_CHANGE = "change scan dir";
+  public static final String BUTTON_ACTION_COMMAND_SCANDIR_MAINTAIN = "maintain scan dir";
 
   public static final String BUTTON_ACTION_COMMAND_SYNCHRONIZATION = "sync library";
   public static final String BUTTON_ACTION_COMMAND_REFRESH_TABLE = "refresh table";
@@ -174,23 +177,23 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     cNorth.gridwidth = 1;
     north.add(databaseDirPanel, cNorth);
 
-    JPanel scanDirPanel = new JPanel();
-    // scanDirPanel.setBackground(Color.green);
-    scanDirPanel.add(new JLabel("Scan Directory: "));
-
-    scanDir = new JTextField(30);
-    scanDir.setEditable(false);
-    scanDirPanel.add(scanDir);
-
-    cNorth.gridx = 1;
-    north.add(scanDirPanel, cNorth);
-
-    cNorth.gridx = 2;
-    cNorth.insets = new Insets(2, -70, 0, 0);
-    JButton buttonBrowseScanDir = new JButton("Change");
-    buttonBrowseScanDir.addActionListener(this);
-    buttonBrowseScanDir.setActionCommand(BUTTON_ACTION_COMMAND_SCANDIR_CHANGE);
-    north.add(buttonBrowseScanDir, cNorth);
+//    JPanel scanDirPanel = new JPanel();
+//    // scanDirPanel.setBackground(Color.green);
+//    scanDirPanel.add(new JLabel("Scan Directory: "));
+//
+//    scanDir = new JTextField(30);
+//    scanDir.setEditable(false);
+//    scanDirPanel.add(scanDir);
+//
+//    cNorth.gridx = 1;
+//    north.add(scanDirPanel, cNorth);
+//
+//    cNorth.gridx = 2;
+//    cNorth.insets = new Insets(2, -70, 0, 0);
+//    JButton buttonBrowseScanDir = new JButton("Change");
+//    buttonBrowseScanDir.addActionListener(this);
+//    buttonBrowseScanDir.setActionCommand(BUTTON_ACTION_COMMAND_SCANDIR_CHANGE);
+//    north.add(buttonBrowseScanDir, cNorth);
 
 
     cNorth.gridx = 0;
@@ -364,6 +367,11 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     menu.add(menuItem);
     menuItem.addActionListener(this);
     menuItem.setActionCommand(BUTTON_ACTION_COMMAND_MENUITEM);
+    
+    menuItem = new JMenuItem(MENU_ITEM_SCAN_DIRECTORIES, KeyEvent.VK_S);
+    menu.add(menuItem);
+    menuItem.addActionListener(this);
+    menuItem.setActionCommand(BUTTON_ACTION_COMMAND_MENUITEM);
 
     menu.addSeparator();
     menuItem = new JMenuItem(MENU_ITEM_QUIT, KeyEvent.VK_Q);
@@ -510,7 +518,7 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     selectScanDirDialog = new JDialog();
     selectScanDirDialog.setSize(600, 200);
     selectScanDirDialog.setLocationRelativeTo(Interface.getInstance().frame);
-    selectScanDirDialog.setTitle("Observation Directory");
+    selectScanDirDialog.setTitle("Scan Diretory");
 
     JPanel panel = new JPanel();
     panel.setLayout(new GridBagLayout());
@@ -522,7 +530,7 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     c.weighty = 0;
     c.anchor = GridBagConstraints.LINE_START;
     c.insets = new Insets(0, 10, 0, 0);
-    panel.add(new JLabel("Select the directory which has to be observed"), c);
+    panel.add(new JLabel("Select the directory which has to be sanned"), c);
 
     c.gridx = 0;
     c.gridy = 1;
@@ -550,7 +558,12 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
     c.fill = GridBagConstraints.BOTH;
     c.insets = new Insets(15, 10, 0, 0);
     // c.anchor = GridBagConstraints.CENTER;
-    scandirPath.setText("C:\\Users\\Daniel\\Downloads");
+    if(Configuration.scanDir.isEmpty()){
+      scandirPath.setText("C:\\Users\\Daniel\\Downloads");
+    }
+    else{
+      scandirPath.setText(Configuration.scanDir);
+    }
     panel.add(scandirPath, c);
 
     c.gridx = 1;
@@ -583,6 +596,85 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
 
     selectScanDirDialog.add(panel);
     selectScanDirDialog.setVisible(true);
+  }
+  
+  public void showMaintainScanDirDialog() {
+    selectMaintainScanDirDialog = new JDialog();
+    selectMaintainScanDirDialog.setSize(600, 200);
+    selectMaintainScanDirDialog.setLocationRelativeTo(Interface.getInstance().frame);
+    selectMaintainScanDirDialog.setTitle("Scan Diretory");
+
+    JPanel panel = new JPanel();
+    panel.setLayout(new GridBagLayout());
+    GridBagConstraints c = new GridBagConstraints();
+
+    c.gridx = 0;
+    c.gridy = 0;
+    c.gridwidth = 2;
+    c.weighty = 0;
+    c.anchor = GridBagConstraints.LINE_START;
+    c.insets = new Insets(0, 10, 0, 0);
+    panel.add(new JLabel("Use a comma separated list of Directories which will be scanned."), c);
+
+    c.gridx = 0;
+    c.gridy = 1;
+    c.gridwidth = 2;
+    c.weighty = 0;
+    c.anchor = GridBagConstraints.LINE_START;
+    c.insets = new Insets(10, 10, 0, 0);
+
+    JTextArea textArea =
+        new JTextArea(
+            "Select a location where the App should search for files matching the allowed extension patterns. ");
+    textArea.setEditable(false);
+    textArea.setLineWrap(true);
+    textArea.setSize(600, 200);
+    Color color = new Color(UIManager.getColor("control").getRGB());
+    textArea.setBackground(color);
+    panel.add(textArea, c);
+
+    c.gridx = 0;
+    c.gridy = 2;
+    c.gridwidth = 1;
+    c.weighty = 0;
+    c.weightx = 1;
+    c.ipadx = 300;
+    c.fill = GridBagConstraints.BOTH;
+    c.insets = new Insets(15, 10, 0, 0);
+    // c.anchor = GridBagConstraints.CENTER;
+    scandirPath.setText(Configuration.scanDir);
+    panel.add(scandirPath, c);
+
+//    c.gridx = 1;
+//    c.gridy = 2;
+//    c.gridwidth = 1;
+//    c.weighty = 0;
+//    c.ipadx = 0;
+//    c.weightx = 0.1;
+//    c.fill = GridBagConstraints.VERTICAL;
+//    // c.anchor = GridBagConstraints.CENTER;
+//    JButton browseButton = new JButton("Browse...");
+//    browseButton.setActionCommand(BUTTON_ACTION_COMMAND_SCANDIR_BROWSE);
+//    browseButton.addActionListener(this);
+//    panel.add(browseButton, c);
+
+    c.gridx = 0;
+    c.gridy = 3;
+    c.gridwidth = 2;
+    c.weightx = 1;
+    c.weighty = 0;
+    c.gridwidth = 2;
+    c.ipadx = 50;
+    c.insets = new Insets(15, 0, 15, 17);
+    c.fill = GridBagConstraints.NONE;
+    c.anchor = GridBagConstraints.CENTER;
+    JButton okButton = new JButton("OK");
+    okButton.setActionCommand(BUTTON_ACTION_COMMAND_SCANDIR_MAINTAIN);
+    okButton.addActionListener(this);
+    panel.add(okButton, c);
+
+    selectMaintainScanDirDialog.add(panel);
+    selectMaintainScanDirDialog.setVisible(true);
   }
 
   @Override
@@ -629,7 +721,9 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
           case MENU_ITEM_FILE_EXTENSION:
             showFileExtensionDialog();
             break;
-
+          case MENU_ITEM_SCAN_DIRECTORIES:
+            showMaintainScanDirDialog();
+            break;
           default:
             break;
         }
@@ -684,9 +778,9 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
         Interface.getInstance().reloadFileTable();
         Configuration.checkForAllowedExtensions();
         break;
-      case BUTTON_ACTION_COMMAND_SCANDIR_CHANGE:
-        showSelectScanDirDialog();
-        break;
+//      case BUTTON_ACTION_COMMAND_SCANDIR_CHANGE:
+//        showSelectScanDirDialog();
+//        break;
       case BUTTON_ACTION_COMMAND_SYNCHRONIZATION:
         if (DatabaseWorker.getInstance().openDatabase()) {
           Thread thread = null;
@@ -864,6 +958,12 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
         Configuration.setConfigurationProperty(Configuration.propertyKeyExtensions,
             Configuration.allowedExtensions);
         break;
+      case BUTTON_ACTION_COMMAND_SCANDIR_MAINTAIN:
+        selectMaintainScanDirDialog.dispose();
+        Configuration.scanDir = scandirPath.getText();        
+        Logger.log("set scandir to " + Configuration.scanDir);
+        Configuration.setConfigurationProperty(Configuration.propertyKeyScanDir,
+            Configuration.scanDir);
       default:
         break;
     }
@@ -1162,11 +1262,8 @@ public class Interface implements ActionListener, MouseListener, DocumentListene
         fileExtensionList.requestFocusInWindow();
       }
     });
-
-
-
   }
-
+  
   @Override
   public void changedUpdate(DocumentEvent arg0) {}
 

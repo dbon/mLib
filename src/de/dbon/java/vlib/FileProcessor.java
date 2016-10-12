@@ -52,12 +52,24 @@ public class FileProcessor implements Runnable {
       MediaLibrary.diskHashes = "";
       MediaLibrary.diskCount = 0;
       Configuration.unsupportedExtensions = "";
-      // reads media files from hard drive and adds them to scannedMediaFiles
-      Logger.log("scanning files...", Logger.LOG_LEVEL_APP);
-      scanFilesOnDisk(new ArrayList<File>(Arrays.asList(searchDir.listFiles())));
+      
+      // for all scanDirs
+      String[] departedScanDirs = Configuration.scanDir.split(";");
+      for(String s : departedScanDirs){
+        Logger.log(departedScanDirs.length + " directories found.");
+        Logger.log("processing directory " + s.toString());
+        // reads media files from hard drive and adds them to scannedMediaFiles
+        Logger.log("scanning files...", Logger.LOG_LEVEL_APP);
+        
+        File currentSearchDir = new File(s);
+        
+        scanFilesOnDisk(new ArrayList<File>(Arrays.asList(currentSearchDir.listFiles())));        
+      }
+
       // delta logic
       Logger.log("importing new files into mLib... ", Logger.LOG_LEVEL_APP);
       importNewFiles(harddriveFiles, mLibObjects);
+      
       // check if there are files in library which doesn't exist on file system anymore
       fileIntegrityCheck();
       Interface.getInstance().reloadFileTable();
@@ -148,7 +160,7 @@ public class FileProcessor implements Runnable {
     // for each file from harddrive
     for (MediaFile diskFile : harddriveFiles) {
 
-      // when file from disk is not yes in db: add it!
+      // when file from disk is not yet in db: add it!
       if (!MediaLibrary.mLibHashes.contains(diskFile.getHash())) {
         Logger.log("processing scanned file with hash: " + diskFile.getHash(),
             Logger.LOG_LEVEL_MUTE);
@@ -180,6 +192,10 @@ public class FileProcessor implements Runnable {
 
       // recursive call to deep fetch all media files
       if (file.isDirectory() && !folder.isLink()) {
+        // skip .folders
+        if(file.getName().startsWith(".")){
+          continue;
+        }
         if (!Configuration.ignoredFolders.contains("," + folder.getName() + ",")) {
           scanFilesOnDisk(new ArrayList<File>(Arrays.asList(file.listFiles())));
         } else {

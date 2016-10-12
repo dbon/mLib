@@ -87,7 +87,7 @@ public class Configuration {
 
   public static void checkForScanDir() {
     if (Configuration.scanDir != null && !"".equals(Configuration.scanDir)) {
-      Interface.scanDir.setText(Configuration.scanDir);
+//      Interface.scanDir.setText(Configuration.scanDir);
       checkForAllowedExtensions();
     } else {
       Interface.getInstance().showSelectScanDirDialog();
